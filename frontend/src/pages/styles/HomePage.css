@@ -1,0 +1,106 @@
+@reference "tailwindcss";
+
+.home-page {
+  @apply h-screen overflow-hidden;
+}
+
+.home-page__content {
+  @apply relative z-[3] h-full;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+/* header */
+.top-header {
+  @apply flex items-start justify-between gap-3 px-4 pt-4;
+}
+
+.home-page__header{
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 20px 8px;
+}
+
+.home-page__greeting{
+  max-width: 420px;
+  padding: 14px 18px;
+  border-radius: 2rem;
+}
+
+.home-page__greeting-title{
+  margin: 0;
+  font-size: 1.9rem;
+  font-weight: 900;
+  line-height: 1.02;
+  color: #183226;
+  letter-spacing: -0.03em;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.65),
+    0 3px 8px rgba(0, 0, 0, 0.06);
+}
+
+.home-page__greeting-subtitle{
+  margin: 6px 0 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #355234;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7),
+    0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* only home middle area scrolls */
+.home-scroll {
+  @apply overflow-y-auto px-4 pt-2 pb-2;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.home-hero {
+  @apply mb-2;
+}
+
+.home-secondary {
+  @apply pb-1;
+}
+
+@media (max-height: 900px) {
+  .top-header {
+    padding-top: 10px;
+    padding-bottom: 4px;
+  }
+
+  .home-scroll {
+    padding-top: 6px;
+    padding-bottom: 4px;
+  }
+
+  .home-hero {
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-height: 820px) {
+  .top-header {
+    padding-top: 8px;
+    padding-bottom: 2px;
+  }
+
+  .home-scroll {
+    padding-top: 4px;
+    padding-bottom: 2px;
+  }
+
+  .home-hero {
+    margin-bottom: 6px;
+  }
+
+  .bottom-nav-row {
+    padding-top: 6px;
+    padding-bottom: 8px;
+  }
+}

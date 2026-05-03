@@ -1,0 +1,138 @@
+@reference "tailwindcss";
+
+.upload-problem {
+  @apply relative z-10 mx-auto mt-2 flex w-[88%] 
+  items-center justify-between gap-4 overflow-hidden 
+  rounded-[1.25rem] px-4 py-3;
+}
+
+.upload-problem__text {
+  @apply flex min-w-0 flex-1 items-start gap-3;
+}
+
+.upload-problem__badge {
+  @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border bg-[#fff7dc] text-[1rem] shadow-[0_4px_10px_rgba(121,108,42,0.10)];
+  border-color: rgb(255 255 255 / 0.7);
+}
+
+.upload-problem__copy {
+  @apply min-w-0;
+}
+
+.upload-problem__title {
+  @apply text-[1.05rem] font-black leading-tight tracking-[-0.02em] text-[#27472f];
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.65),
+    0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.upload-problem__subtitle {
+  @apply mt-1 text-[0.9rem] font-semibold leading-snug text-[#4d6452];
+}
+
+.upload-problem__actions {
+  @apply flex shrink-0 items-center gap-2;
+}
+
+.upload-problem__action {
+  @apply flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-[0.95rem] font-extrabold transition-transform duration-150;
+}
+
+.upload-problem__action:hover {
+  transform: translateY(1px);
+}
+
+.upload-problem__action:active {
+  transform: translateY(2px);
+}
+
+.upload-problem__action--ghost {
+  @apply border-none text-[#214a73];
+  background:
+    linear-gradient(180deg, #bfe6ff 0%, #9fd3f7 58%, #7ab9ea 100%);
+  box-shadow:
+    0 3px 0 #5f9fd2,
+    0 6px 10px rgba(62, 131, 205, 0.12),
+    inset 0 2px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -2px 0 rgba(59, 114, 168, 0.14);
+}
+
+.upload-problem__action-label {
+  @apply text-[0.95rem] font-extrabold leading-none;
+}
+
+@media (max-width: 900px) {
+  .upload-problem {
+    @apply w-[92%] flex-col items-stretch gap-3;
+  }
+
+  .upload-problem__actions {
+    @apply w-full;
+  }
+
+  .upload-problem__action {
+    @apply flex-1;
+  }
+}
+
+@media (max-width: 700px) {
+  .upload-problem__actions {
+    @apply flex-col;
+  }
+
+  .upload-problem__action {
+    @apply w-full;
+  }
+}
+
+@media (max-height: 900px) {
+  .upload-problem {
+    @apply mt-1 px-4 py-2.5 gap-3;
+  }
+
+  .upload-problem__badge {
+    @apply h-8 w-8 text-[0.95rem];
+  }
+
+  .upload-problem__title {
+    @apply text-[0.98rem];
+  }
+
+  .upload-problem__subtitle {
+    @apply mt-0.5 text-[0.82rem];
+  }
+
+  .upload-problem__actions {
+    @apply gap-1.5;
+  }
+
+  .upload-problem__action {
+    @apply px-3.5 py-2 text-[0.85rem];
+  }
+
+  .upload-problem__action-label {
+    @apply text-[0.85rem];
+  }
+}
+
+@media (max-height: 820px) {
+  .upload-problem {
+    @apply py-2;
+  }
+
+  .upload-problem__title {
+    @apply text-[0.92rem];
+  }
+
+  .upload-problem__subtitle {
+    @apply text-[0.78rem];
+  }
+
+  .upload-problem__action {
+    @apply px-3 py-1.5 text-[0.8rem];
+  }
+
+  .upload-problem__action-label {
+    @apply text-[0.8rem];
+  }
+}

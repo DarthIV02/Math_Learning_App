@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-title: #000000;
+  --color-brand-subtitle: #000000;
+  --color-brand-accent: #facc15;
+  --color-surface-card: rgba(255, 255, 255, 0.9);
+  --color-stat-text: #4a2e1f;
+  --color-divider-soft: rgba(120, 140, 150, 0.3);
+  --font-display: "Baloo 2", "Nunito", sans-serif;
+  --shadow-card-soft: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.app,
+.app__content {
+  min-height: 100dvh;
+}
+
+.home-cards {
+  @apply flex flex-col;
+}
+
+.home-page,
+.profile-page,
+.select-topic-page,
+.solve-page {
+  position: relative;
+  min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.home-page__content,
+.profile-page__content,
+.select-topic-page__content,
+.solve-page__content {
+  position: relative;
+  z-index: 3;
+}

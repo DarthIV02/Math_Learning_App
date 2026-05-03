@@ -1,0 +1,53 @@
+@reference "tailwindcss";
+
+.auth-card {
+  @apply relative z-10 w-full max-w-md rounded-[28px] border border-blue-100/50 bg-white/90 backdrop-blur-xl p-6;
+  box-shadow: 0 8px 40px rgba(59, 130, 246, 0.12);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+.auth-title-block {
+  @apply mb-5 space-y-2 text-center;
+}
+
+.auth-title {
+  @apply text-[2rem] font-semibold text-slate-900;
+}
+
+.auth-subtitle {
+  @apply text-sm text-slate-500;
+}
+
+.auth-content {
+  @apply space-y-4;
+}
+
+.auth-footnote {
+  @apply mt-5 space-y-2 text-center text-sm text-slate-600;
+}
+
+/* Shorter screens */
+@media (max-height: 900px) {
+  .auth-card {
+    @apply p-5;
+    max-height: calc(100vh - 1.5rem);
+  }
+  .auth-title-block { @apply mb-4 space-y-1; }
+  .auth-title { @apply text-[1.8rem]; }
+  .auth-subtitle { @apply text-[0.9rem]; }
+  .auth-content { @apply space-y-3; }
+  .auth-footnote { @apply mt-4 space-y-1.5 text-[0.85rem]; }
+}
+
+@media (max-height: 820px) {
+  .auth-card {
+    @apply p-4;
+    max-height: calc(100vh - 1rem);
+  }
+  .auth-title-block { @apply mb-3 space-y-1; }
+  .auth-title { @apply text-[1.55rem]; }
+  .auth-subtitle { @apply text-[0.82rem]; }
+  .auth-content { @apply space-y-2.5; }
+  .auth-footnote { @apply mt-3 space-y-1 text-[0.8rem]; }
+}

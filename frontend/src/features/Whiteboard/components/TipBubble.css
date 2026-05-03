@@ -1,0 +1,216 @@
+/* ─────────────────────────────────────────────
+   Backdrop — subtle dimming, tap to close
+───────────────────────────────────────────── */
+.tip-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  background: rgba(14, 165, 233, 0.08);
+  border-radius: inherit;
+  cursor: pointer;
+}
+
+/* ─────────────────────────────────────────────
+   Bubble
+───────────────────────────────────────────── */
+.tip-bubble {
+  position: absolute;
+  top: 64px;        /* just below the Tips button */
+  left: 12px;       /* aligned with the left button */
+  z-index: 50;
+  width: min(340px, calc(100% - 24px));
+
+  background: #fff;
+  border-radius: 2rem;
+  border: 4px solid #38bdf8;          /* sky-400 */
+  padding: 20px 20px 16px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+
+  /* Playful multi-layer shadow */
+  box-shadow:
+    0 6px 0 #0ea5e9,                  /* sky-500 bottom edge */
+    0 12px 32px rgba(14, 165, 233, 0.25);
+
+  /* Spring-in animation */
+  animation: tip-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes tip-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.7) translateY(-8px);
+    transform-origin: top left;
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    transform-origin: top left;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Speech-bubble tail (points up-left → button)
+───────────────────────────────────────────── */
+.tip-tail {
+  position: absolute;
+  top: -20px;
+  left: 28px;
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-bottom: 20px solid #38bdf8;  /* matches border color */
+}
+
+/* White inner tail to create hollow triangle effect */
+.tip-tail::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: -10px;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 17px solid #fff;
+}
+
+/* ─────────────────────────────────────────────
+   Close button
+───────────────────────────────────────────── */
+.tip-close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid #f472b6;          /* pink-400 */
+  background: #fff;
+  color: #f472b6;
+  font-size: 0.85rem;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 0 #db2777, 0 6px 12px rgba(244, 114, 182, 0.3);
+  transition: transform 0.12s, box-shadow 0.12s;
+  line-height: 1;
+}
+
+.tip-close:hover {
+  transform: scale(1.12) rotate(8deg);
+  box-shadow: 0 4px 0 #db2777, 0 8px 16px rgba(244, 114, 182, 0.35);
+}
+
+.tip-close:active {
+  transform: scale(0.93);
+  box-shadow: 0 1px 0 #db2777;
+}
+
+/* ─────────────────────────────────────────────
+   Mascot icon
+───────────────────────────────────────────── */
+.tip-mascot {
+  font-size: 2.4rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.12));
+  animation: tip-wiggle 2.4s ease-in-out infinite;
+}
+
+@keyframes tip-wiggle {
+  0%, 100% { transform: rotate(-6deg); }
+  50%       { transform: rotate(6deg); }
+}
+
+/* ─────────────────────────────────────────────
+   Tip text
+───────────────────────────────────────────── */
+.tip-text {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.55;
+  color: #0c4a6e;                     /* sky-950 */
+  text-align: center;
+  margin: 0;
+  transition: opacity 0.18s, transform 0.18s;
+}
+
+.tip-text--exit {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+/* ─────────────────────────────────────────────
+   Pagination dots
+───────────────────────────────────────────── */
+.tip-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #bae6fd;                /* sky-200 */
+  transition: background 0.2s, transform 0.2s;
+}
+
+.tip-dot--active {
+  background: #0ea5e9;                /* sky-500 */
+  transform: scale(1.3);
+}
+
+/* ─────────────────────────────────────────────
+   Next / continue button
+───────────────────────────────────────────── */
+.tip-next {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 24px;
+  border-radius: 999px;
+  border: 3px solid #38bdf8;
+  background: #e0f2fe;                /* sky-100 */
+  color: #0369a1;                     /* sky-700 */
+  cursor: pointer;
+  transition: transform 0.12s, background 0.12s, box-shadow 0.12s;
+  box-shadow: 0 3px 0 #0ea5e9;
+}
+
+.tip-next:hover {
+  background: #bae6fd;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 #0ea5e9;
+}
+
+.tip-next:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #0ea5e9;
+}
+
+.tip-next__label {
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.tip-next__arrow {
+  font-size: 0.75rem;
+  animation: tip-bounce 1s ease-in-out infinite;
+}
+
+@keyframes tip-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(3px); }
+}

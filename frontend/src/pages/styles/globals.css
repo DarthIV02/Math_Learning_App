@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+body, * {
+  font-family: 'Nunito', sans-serif;
+}
+
+@theme {
+  --color-brand-title: #000000;
+  --color-brand-subtitle: #000000;
+  --color-brand-accent: #facc15;
+  --color-surface-card: rgba(255, 255, 255, 0.9);
+  --color-stat-text: #4a2e1f;
+  --color-divider-soft: rgba(120, 140, 150, 0.3);
+
+  --font-display: "Baloo 2", "Nunito", sans-serif;
+  --shadow-card-soft: 0 8px 24px rgba(0, 0, 0, 0.08);
+}

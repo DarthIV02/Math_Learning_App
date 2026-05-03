@@ -1,0 +1,15 @@
+.surface-card {
+  background: rgba(248, 252, 245, 0.78);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 12px 30px rgba(86, 116, 87, 0.14);
+  border-radius: 2rem;
+}
+
+.surface-card--soft {
+  background: rgba(248, 252, 245, 0.64);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  box-shadow: 0 8px 20px rgba(86, 116, 87, 0.1);
+  border-radius: 2rem;
+}

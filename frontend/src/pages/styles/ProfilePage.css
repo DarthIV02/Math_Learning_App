@@ -1,0 +1,25 @@
+@reference "tailwindcss";
+
+.profile-page {
+  @apply relative h-screen overflow-hidden;
+}
+
+.profile-page__content {
+  @apply relative z-[3] h-full;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.profile-page__scroll {
+  @apply overflow-y-auto px-4 py-4;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.profile-page__stack {
+  @apply mx-auto flex w-full flex-col gap-4;
+}
+
+.profile-page__nav {
+  @apply relative z-10;
+}

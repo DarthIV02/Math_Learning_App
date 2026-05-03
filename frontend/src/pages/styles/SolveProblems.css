@@ -1,0 +1,25 @@
+@reference "tailwindcss";
+
+.solve-page {
+  font-family: 'Nunito', sans-serif;
+}
+
+.whiteboard-shell {
+  min-height: 100%;
+}
+
+.whiteboard-area {
+  background-image:
+    linear-gradient(to bottom, rgba(226, 232, 240, 0.35) 1px, transparent 1px),
+    linear-gradient(to right, rgba(226, 232, 240, 0.25) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.whiteboard-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+  cursor: crosshair;
+  border-radius: 1.25rem;
+}

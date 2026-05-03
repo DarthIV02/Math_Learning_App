@@ -1,0 +1,8 @@
+/* Only what Tailwind can't do — the gradient text clip */
+.btn-qr__label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  background: linear-gradient(to right, #2563eb, #16a34a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

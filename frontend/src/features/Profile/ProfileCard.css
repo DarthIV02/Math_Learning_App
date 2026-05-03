@@ -1,0 +1,21 @@
+@reference "tailwindcss";
+
+.profile-card {
+  @apply flex items-center gap-4 rounded-3xl p-4;
+}
+
+.profile-card__avatar {
+  @apply h-14 w-14 rounded-full border border-white bg-white object-contain shadow;
+}
+
+.profile-card__info {
+  @apply min-w-0;
+}
+
+.profile-card__name {
+  @apply truncate text-lg font-bold text-slate-900;
+}
+
+.profile-card__email {
+  @apply truncate text-sm text-slate-600;
+}

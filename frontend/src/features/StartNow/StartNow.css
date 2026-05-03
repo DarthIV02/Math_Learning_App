@@ -1,0 +1,161 @@
+@reference "tailwindcss";
+
+.start-now {
+  @apply relative z-10 mx-auto mt-2 flex w-[92%] min-w-0 flex-1 flex-col overflow-hidden rounded-[2rem] px-5 py-4.5;
+}
+
+.start-now__title {
+  @apply text-[1.45rem] font-black leading-none tracking-[-0.03em] text-[#27472f];
+}
+
+.start-now__topic-row {
+  @apply mt-2.5 flex items-center gap-3;
+}
+
+.start-now__topic-icon {
+  @apply flex h-10 w-10 items-center justify-center rounded-[1rem] bg-white/65 text-[1.3rem] shadow-[0_4px_10px_rgba(80,110,85,0.08)];
+}
+
+.start-now__topic-text {
+  @apply flex flex-wrap items-baseline gap-x-2;
+}
+
+.start-now__topic-main {
+  @apply text-[1.28rem] font-black leading-tight tracking-[-0.03em] text-[#16324f];
+}
+
+.start-now__topic-level {
+  @apply text-[0.9rem] font-extrabold text-slate-600;
+}
+
+.start-now__goal {
+  @apply mt-3 mb-3 rounded-[1.3rem] px-4 py-3;
+  background: rgba(224, 242, 28, 0);
+  border: 1px solid rgb(196, 182, 38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.start-now__goal-header {
+  @apply mb-2 flex items-center justify-between gap-3;
+}
+
+.start-now__goal-label {
+  @apply text-[1.1rem] font-extrabold text-[#35523a];
+  font-size: 1.6rem; /* adjust as needed */
+  line-height: 1;
+}
+
+.start-now__goal-bar {
+  @apply h-3.5 w-full overflow-hidden rounded-full;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: inset 0 2px 4px rgba(80, 109, 78, 0.12);
+}
+
+.start-now__goal-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffd65a 0%, #ffbf3c 100%);
+  box-shadow: 0 2px 6px rgba(255, 191, 60, 0.3);
+  transition: width 0.35s ease;
+}
+
+.start-now__goal-text {
+  @apply mt-2 text-[0.9rem] font-bold text-[#537057];
+}
+
+/* upscale a bit on larger screens */
+@media (min-width: 1100px) {
+  .start-now {
+    @apply px-5 py-5;
+  }
+
+  .start-now__title {
+    @apply text-[1.7rem];
+  }
+
+  .start-now__topic-main {
+    @apply text-[1.55rem];
+  }
+
+  .start-now__topic-level {
+    @apply text-[1rem];
+  }
+}
+
+@media (max-height: 900px) {
+  .start-now {
+    @apply mt-1.5 px-4.5 py-3.5;
+  }
+
+  .start-now__title {
+    @apply text-[1.28rem];
+  }
+
+  .start-now__topic-row {
+    @apply mt-2 gap-2.5;
+  }
+
+  .start-now__topic-icon {
+    @apply h-9 w-9 text-[1.15rem];
+  }
+
+  .start-now__topic-main {
+    @apply text-[1.12rem];
+  }
+
+  .start-now__topic-level {
+    @apply text-[0.84rem];
+  }
+
+  .start-now__goal {
+    margin-top: 0.75rem;
+    margin-bottom: 0.8rem;
+    padding: 0.75rem 0.95rem;
+    border-radius: 1rem;
+  }
+
+  .start-now__goal-header {
+    margin-bottom: 0.5rem;
+  }
+
+  .start-now__goal-label {
+    font-size: 1.1rem;
+  }
+
+  .start-now__goal-bar {
+    height: 0.72rem;
+  }
+
+  .start-now__goal-text {
+    margin-top: 0.5rem;
+    font-size: 0.84rem;
+  }
+}
+
+@media (max-height: 820px) {
+  .start-now {
+    @apply px-4 py-3;
+  }
+
+  .start-now__title {
+    @apply text-[1.16rem];
+  }
+
+  .start-now__topic-main {
+    @apply text-[1.02rem];
+  }
+
+  .start-now__goal {
+    margin-top: 0.6rem;
+    margin-bottom: 0.7rem;
+    padding: 0.68rem 0.85rem;
+  }
+
+  .start-now__goal-label {
+    font-size: 1.05rem;
+  }
+
+  .start-now__goal-text {
+    font-size: 0.8rem;
+  }
+}

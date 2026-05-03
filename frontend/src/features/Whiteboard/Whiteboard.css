@@ -1,0 +1,232 @@
+@reference "tailwindcss";
+
+/* ─────────────────────────────────────────────
+   Shell — horizontal flex: [tray] [board]
+───────────────────────────────────────────── */
+.whiteboard-shell {
+  @apply flex w-full flex-row gap-3 rounded-[2rem] border-4 border-white/70 bg-white/80 p-4 shadow-xl backdrop-blur-md;
+}
+
+/* ─────────────────────────────────────────────
+   Sticker tray — left vertical strip
+───────────────────────────────────────────── */
+.sticker-tray {
+  @apply flex flex-col items-center gap-3 rounded-[1.5rem] border-4 border-dashed border-sky-100 bg-sky-50/60 px-2 py-4;
+  /* Fixed width so it never squishes the board */
+  width: 72px;
+  flex-shrink: 0;
+  /* Scrollable if stickers overflow vertically */
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Max height matches the board's min-height */
+  max-height: 420px;
+}
+
+.sticker-tray__label {
+  @apply text-base leading-none;
+  flex-shrink: 0;
+}
+
+.sticker-tray__items {
+  @apply flex flex-col items-center gap-3;
+  width: 100%;
+}
+
+/* Individual sticker in the tray */
+.tray-sticker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border-radius: 1rem;
+  background: white;
+  border: 3px solid #bae6fd;
+  cursor: grab;
+  user-select: none;
+  width: 52px;
+  transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
+  box-shadow: 0 2px 0 #bae6fd, 0 4px 10px rgba(14, 165, 233, 0.12);
+}
+
+.tray-sticker:hover {
+  transform: scale(1.1) translateX(2px);
+  border-color: #38bdf8;
+  box-shadow: 0 4px 0 #38bdf8, 0 8px 16px rgba(14, 165, 233, 0.22);
+}
+
+.tray-sticker:active {
+  cursor: grabbing;
+  transform: scale(0.95);
+}
+
+.tray-sticker__emoji {
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.tray-sticker__label {
+  @apply text-[0.55rem] font-black text-sky-600 uppercase tracking-wide text-center;
+  /* Show labels — they fit under the emoji in the narrow strip */
+  max-width: 44px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─────────────────────────────────────────────
+   Board area — fills remaining horizontal space
+───────────────────────────────────────────── */
+.whiteboard-area {
+  @apply relative min-h-[420px] flex-1 overflow-hidden rounded-[1.5rem] border-4 border-dashed border-sky-200 bg-white;
+}
+
+.whiteboard-clear {
+  @apply absolute top-4 right-4 z-20 rounded-full px-4 py-2 text-sm font-black text-white shadow-md transition hover:scale-[1.05] active:scale-[0.95] bg-pink-400 hover:bg-pink-500;
+  box-shadow:
+    0 4px 0 #c702a6,
+    0 8px 14px rgba(233, 14, 124, 0.25);
+}
+
+.whiteboard-tips {
+  @apply absolute top-4 left-4 z-20 rounded-full px-4 py-2 text-sm font-black text-white shadow-md transition hover:scale-[1.05] active:scale-[0.95] bg-sky-400 hover:bg-sky-500;
+  box-shadow:
+    0 4px 0 #0284c7,
+    0 8px 14px rgba(14, 165, 233, 0.25);
+}
+
+.whiteboard-placeholder {
+  @apply pointer-events-none absolute inset-0 z-10 flex items-center justify-center;
+}
+
+.whiteboard-placeholder__text {
+  @apply select-none text-2xl font-black text-sky-300/70 md:text-3xl;
+}
+
+.whiteboard-canvas {
+  @apply absolute inset-0 h-full w-full touch-none;
+  z-index: 1;
+}
+
+/* ─────────────────────────────────────────────
+   Placed stickers (on the board)
+───────────────────────────────────────────── */
+.placed-sticker {
+  position: absolute;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  width: 56px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.18));
+  transition: filter 0.1s;
+}
+
+.placed-sticker:active {
+  cursor: grabbing;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.28));
+}
+
+.placed-sticker__emoji {
+  font-size: 2.2rem;
+  line-height: 1;
+  display: block;
+}
+
+/* Delete button */
+.sticker-delete {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  z-index: 40;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
+  opacity: 0;
+  transform: scale(0.6);
+  pointer-events: none;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.sticker-delete--visible {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+/* Editable number badge */
+.sticker-value {
+  width: 44px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 900;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 999px;
+  border: 2px solid #38bdf8;
+  background: #ffffff;
+  color: #0369a1;
+  outline: none;
+  cursor: text;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.sticker-value:focus {
+  border-color: #f472b6;
+  box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.25);
+}
+
+/* ─────────────────────────────────────────────
+   Touch drag ghost
+───────────────────────────────────────────── */
+.sticker-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  font-size: 2.5rem;
+  opacity: 0.75;
+  width: 56px;
+  text-align: center;
+}
+
+/* ─────────────────────────────────────────────
+   Responsive — on very small screens stack
+   the tray above the board instead
+───────────────────────────────────────────── */
+@media (max-width: 400px) {
+  .whiteboard-shell {
+    @apply flex-col;
+  }
+
+  .sticker-tray {
+    flex-direction: row;
+    width: 100%;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 8px 12px;
+  }
+
+  .sticker-tray__items {
+    flex-direction: row;
+    flex-wrap: nowrap;
+  }
+
+  .whiteboard-tips span,
+  .whiteboard-clear span {
+    display: none;
+  }
+}

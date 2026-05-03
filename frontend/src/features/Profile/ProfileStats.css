@@ -1,0 +1,21 @@
+@reference "tailwindcss";
+
+.profile-stats {
+  @apply grid grid-cols-3 gap-3;
+}
+
+.profile-stats__item {
+  @apply rounded-2xl p-3 text-center;
+}
+
+.profile-stats__icon {
+  @apply text-xl;
+}
+
+.profile-stats__value {
+  @apply text-lg font-bold text-slate-900;
+}
+
+.profile-stats__label {
+  @apply text-xs text-slate-600;
+}

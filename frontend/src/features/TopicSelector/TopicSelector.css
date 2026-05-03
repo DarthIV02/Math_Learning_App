@@ -1,0 +1,90 @@
+@reference "tailwindcss";
+
+.topic-selector-card {
+  @apply w-full max-w-[1100px] rounded-[28px];
+}
+
+.topic-selector {
+  --section-gap: 10px;
+
+  @apply relative z-10 grid w-full gap-4 px-4 pt-4 pb-4;
+  grid-template-columns: 1.2fr 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 100%;
+}
+
+.topic-selector__difficulty {
+  @apply flex justify-center;
+  grid-column: 1 / -1;
+}
+
+.topic-selector__section {
+  @apply flex flex-col;
+}
+
+.topic-selector__math-grid {
+  @apply grid gap-[var(--section-gap)];
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.topic-selector__theme-grid {
+  @apply grid gap-[var(--section-gap)];
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (min-width: 901px) {
+  .topic-selector-card {
+    min-height: 100%;
+  }
+
+  .topic-selector {
+    height: 100%;
+  }
+
+  .topic-selector__math-grid,
+  .topic-selector__theme-grid {
+    height: 100%;
+  }
+
+  .topic-selector__math-grid .task-btn,
+  .topic-selector__theme-grid .task-btn {
+    height: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  .topic-selector {
+    height: auto;
+    min-height: auto;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  .topic-selector__math-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .topic-selector__theme-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .topic-selector__theme-grid .task-btn {
+    min-height: 150px;
+  }
+}
+
+@media (max-width: 650px) {
+  .topic-selector {
+    @apply p-3;
+  }
+
+  .topic-selector__math-grid,
+  .topic-selector__theme-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .topic-selector__math-grid .task-btn,
+  .topic-selector__theme-grid .task-btn {
+    min-height: 105px;
+  }
+}

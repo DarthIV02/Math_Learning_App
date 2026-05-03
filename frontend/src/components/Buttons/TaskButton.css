@@ -1,0 +1,260 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap');
+
+/* ── Base ── */
+.task-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 24px;
+
+  cursor: pointer;
+  overflow: hidden;
+  text-align: left;
+  font-weight: 900;
+
+  transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .task-btn:hover {
+    transform: translateY(-3px) scale(1.02);
+  }
+}
+
+.task-btn:active {
+  transform: translateY(3px) scale(0.98);
+  filter: brightness(0.95);
+}
+
+/* shine overlay */
+.task-btn::before {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 7px;
+  height: 38%;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.28) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  z-index: 1;
+}
+
+
+.task-btn > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Math variants ── */
+.task-btn--math-addition {
+  color: #1f3f5a;
+  background: linear-gradient(180deg, #c3ddf0 0%, #79b8e5 55%, hsl(205, 46%, 54%) 100%);
+  box-shadow:
+    0 6px 0 #466f8b,
+    0 10px 16px rgba(60, 100, 140, 0.18),
+    inset 0 2px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -3px 0 rgba(50, 80, 110, 0.18);
+}
+
+.task-btn--math-subtraction {
+  color: #ffffff;
+  background: linear-gradient(180deg, #d2fab1 0%, #77e030 55%, #6abd3a 100%);
+  box-shadow:
+    0 6px 0 #3e6f22,
+    0 10px 16px rgba(64, 133, 37, 0.2),
+    inset 0 2px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -3px 0 rgba(40, 80, 25, 0.25);
+}
+
+.task-btn--math-multiplication {
+  color: #fff;
+  background: linear-gradient(180deg, #f98686 0%, #fb4343 55%, #c00101 100%);
+  box-shadow:
+    0 6px 0 #6f2828,
+    0 10px 16px rgba(140, 60, 60, 0.2),
+    inset 0 2px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -3px 0 rgba(90, 30, 30, 0.25);
+}
+
+.task-btn--math-division {
+  color: #fff;
+  background: linear-gradient(180deg, #cab5fb 0%, #8a70d2 55%, #45357a 100%);
+  box-shadow:
+    0 6px 0 #332461,
+    0 10px 16px rgba(90, 70, 160, 0.2),
+    inset 0 2px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -3px 0 rgba(60, 40, 120, 0.25);
+}
+
+.task-btn--theme,
+.task-btn--theme-pink {
+  color: #5a4200;
+  background: linear-gradient(180deg, #f6ebc2 0%, #fed54f 55%, #b59342 100%);
+  box-shadow:
+    0 6px 0 #745a1e,
+    0 10px 16px rgba(160, 120, 40, 0.18),
+    inset 0 2px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -3px 0 rgba(120, 90, 20, 0.22);
+
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px 8px 10px;
+}
+
+.task-btn--math-addition:active {
+  box-shadow:
+    0 3px 0 #5f9fd2,
+    0 6px 10px rgba(66, 124, 187, 0.12),
+    inset 0 2px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -3px 0 rgba(59, 114, 168, 0.16);
+}
+
+.task-btn--math-subtraction:active {
+  box-shadow:
+    0 3px 0 #2f7f1d,
+    0 6px 10px rgba(61, 128, 38, 0.16),
+    inset 0 2px 0 rgba(255, 255, 255, 0.34),
+    inset 0 -3px 0 rgba(35, 109, 33, 0.28);
+}
+
+.task-btn--math-multiplication:active {
+  box-shadow:
+    0 3px 0 #9f2323,
+    0 6px 10px rgba(190, 45, 45, 0.15),
+    inset 0 2px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -3px 0 rgba(120, 25, 25, 0.24);
+}
+
+.task-btn--math-division:active {
+  box-shadow:
+    0 3px 0 #4f2ea3,
+    0 6px 10px rgba(105, 68, 200, 0.16),
+    inset 0 2px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -3px 0 rgba(70, 40, 150, 0.25);
+}
+
+.task-btn--theme:active,
+.task-btn--theme-pink:active {
+  box-shadow:
+    0 3px 0 #b98512,
+    0 6px 10px rgba(210, 160, 30, 0.16),
+    inset 0 2px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -3px 0 rgba(150, 105, 10, 0.22);
+}
+
+/* ── Icon circle ── */
+.task-btn__icon-circle {
+  width: 42px; height: 42px; min-width: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 900;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.task-btn--math-addition       .task-btn__icon-circle { color: #1a70c8; }
+.task-btn--math-subtraction    .task-btn__icon-circle { color: #1a7820; }
+.task-btn--math-multiplication .task-btn__icon-circle { color: #b02828; }
+.task-btn--math-division       .task-btn__icon-circle { color: #6030b8; }
+
+/* ── Text block ── */
+.task-btn__text-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+/* ── Title ── */
+.task-btn__title {
+  font-size: clamp(12px, 1.4vw, 15px);
+  font-weight: 900;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.task-btn--math-addition       .task-btn__title { color: #0a3c6f; }
+.task-btn--math-subtraction    .task-btn__title { color: #114a11; }
+.task-btn--math-multiplication .task-btn__title { color: #7e0e0e; }
+.task-btn--math-division       .task-btn__title { color: #311d67; }
+.task-btn--theme               .task-btn__title,
+.task-btn--theme-pink          .task-btn__title { color: #694912; font-size: 14px; }
+
+/* ── Subtitle ── */
+.task-btn__subtitle {
+  font-size: clamp(9px, 1vw, 11px);
+  font-weight: 700;
+  color: #000000;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.task-btn--theme      .task-btn__subtitle,
+.task-btn--theme-pink .task-btn__subtitle { color: #684b16; font-size: 10px; }
+
+/* ── Formula ── */
+.task-btn__formula {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 10px;
+  padding: 2px 10px;
+  font-size: clamp(11px, 1.1vw, 13px);
+  font-weight: 900;
+  color: #333;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+/* ── Mascot ── */
+.task-btn__mascot--theme {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.task-btn__mascot-img {
+  max-width: 100%;
+  max-height: 160px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.15));
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .task-btn--math-addition,
+  .task-btn--math-subtraction,
+  .task-btn--math-multiplication,
+  .task-btn--math-division {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 6px;
+    padding: 12px 10px;
+  }
+
+  .task-btn--math-addition    .task-btn__text-block,
+  .task-btn--math-subtraction .task-btn__text-block,
+  .task-btn--math-multiplication .task-btn__text-block,
+  .task-btn--math-division    .task-btn__text-block {
+    align-items: center;
+    text-align: center;
+  }
+}

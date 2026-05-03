@@ -1,0 +1,14 @@
+@reference "tailwindcss";
+
+.login-page {
+  @apply min-h-screen flex flex-col items-center justify-center px-4 py-4 bg-cover bg-center relative;
+}
+
+.auth-app-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  background: linear-gradient(to right, #2563eb, #16a34a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
