@@ -1,10 +1,12 @@
 @reference "tailwindcss";
 
 .bottom-nav {
-  @apply relative z-10 mx-auto flex w-full 
+  @apply fixed bottom-5 left-1/2 z-10 flex w-full 
   max-w-[1100px] items-stretch justify-between 
   overflow-hidden rounded-[2rem] border border-white/70 
-  px-4 py-2 backdrop-blur-md mb-5;
+  px-4 py-2 backdrop-blur-md;
+  
+  transform: translateX(-50%);
   
   background:
     linear-gradient(
@@ -30,17 +32,37 @@
 }
 
 .bottom-nav__item {
-  @apply relative z-10 flex min-h-[80px] flex-1 flex-col items-center justify-center gap-1 rounded-[1.4rem] bg-transparent px-3 py-2 text-center transition duration-150;
+  @apply relative z-10 flex min-h-[80px] flex-1 flex-col items-center justify-center gap-1 rounded-[1.4rem] bg-transparent px-3 py-2 text-center;
+  
   border: none;
   cursor: pointer;
+  
+  /* Smooth transition for touch feedback */
+  transition: transform 100ms ease, background 150ms ease;
+  
+  /* Prevent text selection on tap-hold */
+  -webkit-user-select: none;
+  user-select: none;
+  
+  /* Remove iOS tap highlight flash */
+  -webkit-tap-highlight-color: transparent;
+  
+  /* Ensure touch events fire correctly */
+  touch-action: manipulation;
 }
 
-.bottom-nav__item:hover {
-  background: rgba(255, 255, 255, 0.3);
+/* Remove hover on touch devices — hover states linger after tap on iPad */
+@media (hover: hover) {
+  .bottom-nav__item:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
 }
 
+/* Press feedback — snappier and more physical */
 .bottom-nav__item:active {
-  transform: translateY(2px);
+  transform: scale(0.93);
+  background: rgba(255, 255, 255, 0.5);
+  transition: transform 80ms ease, background 80ms ease;
 }
 
 .bottom-nav__item--active {
@@ -77,7 +99,7 @@
 
 @media (max-width: 1100px) {
   .bottom-nav {
-    @apply w-[92%] px-3 py-2;
+    @apply w-[92%] px-3 py-3;
   }
 
   .bottom-nav__item {
@@ -85,10 +107,10 @@
   }
 
   .bottom-nav__icon {
-    @apply text-[1.35rem];
+    @apply text-[2rem];
   }
 
   .bottom-nav__label {
-    @apply text-[0.9rem];
+    @apply text-[1.2rem];
   }
 }

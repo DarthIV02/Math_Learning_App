@@ -1,14 +1,19 @@
 import './BackButton.css';
+import { useIsSmallScreen } from '../../hooks/useIsSmallScreen';
 
-export default function BackButton({ onBack }) {
+export default function BackButton({ onBack, change_when = 800, }) {
+
+  const isSmall = useIsSmallScreen(change_when);
+
   return (
     <button
       type="button"
-      onClick={onBack}
+      onPointerUp={onBack}
       className="back-button"
       aria-label="Zurück"
     >
-      ← Zurück
+      🏠
+      {!isSmall && ' Home'}
     </button>
   );
 }

@@ -79,12 +79,18 @@ export default function Whiteboard({
     const touchGhost = useRef(null);
 
     const onTrayTouchStart = useCallback((e, sticker) => {
+      e.preventDefault();
+      e.stopPropagation();
+
       touchSticker.current = sticker;
+
       const ghost = document.createElement('div');
       ghost.className = 'sticker-ghost';
       ghost.textContent = sticker.emoji;
       document.body.appendChild(ghost);
+
       touchGhost.current = ghost;
+
       const t = e.touches[0];
       ghost.style.left = `${t.clientX - 28}px`;
       ghost.style.top = `${t.clientY - 28}px`;
@@ -92,23 +98,35 @@ export default function Whiteboard({
 
     const onTrayTouchMove = useCallback((e) => {
       if (!touchGhost.current) return;
+
       e.preventDefault();
+      e.stopPropagation();
+
       const t = e.touches[0];
       touchGhost.current.style.left = `${t.clientX - 28}px`;
       touchGhost.current.style.top = `${t.clientY - 28}px`;
     }, []);
 
     const onTrayTouchEnd = useCallback((e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
       const sticker = touchSticker.current;
       const ghost = touchGhost.current;
+
       if (!sticker || !ghost || !boardRef.current) return;
+
       document.body.removeChild(ghost);
       touchGhost.current = null;
+
       const t = e.changedTouches[0];
       const rect = boardRef.current.getBoundingClientRect();
+
       if (
-        t.clientX >= rect.left && t.clientX <= rect.right &&
-        t.clientY >= rect.top  && t.clientY <= rect.bottom
+        t.clientX >= rect.left &&
+        t.clientX <= rect.right &&
+        t.clientY >= rect.top &&
+        t.clientY <= rect.bottom
       ) {
         setPlaced((prev) => [
           ...prev,
@@ -121,6 +139,7 @@ export default function Whiteboard({
           },
         ]);
       }
+
       touchSticker.current = null;
     }, []);
 
@@ -130,8 +149,14 @@ export default function Whiteboard({
     const onPlacedPointerDown = useCallback((e, uid) => {
       if (e.target.classList.contains('sticker-value')) return;
       if (e.target.closest('.placed-sticker__delete')) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
       e.currentTarget.setPointerCapture(e.pointerId);
+
       const rect = e.currentTarget.getBoundingClientRect();
+
       draggingPlaced.current = {
         uid,
         offsetX: e.clientX - rect.left,
@@ -142,14 +167,19 @@ export default function Whiteboard({
     const onBoardPointerMove = useCallback((e) => {
       const dragging = draggingPlaced.current;
       if (!dragging || !boardRef.current) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
       const rect = boardRef.current.getBoundingClientRect();
+
       setPlaced((prev) =>
         prev.map((p) =>
           p.uid === dragging.uid
             ? {
                 ...p,
                 x: Math.max(0, e.clientX - rect.left - dragging.offsetX),
-                y: Math.max(0, e.clientY - rect.top  - dragging.offsetY),
+                y: Math.max(0, e.clientY - rect.top - dragging.offsetY),
               }
             : p
         )

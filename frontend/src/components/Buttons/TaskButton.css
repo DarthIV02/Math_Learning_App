@@ -8,15 +8,22 @@
   justify-content: flex-start;
   gap: 10px;
 
-  width: 100%;
-  padding: 12px 14px;
-  border: none;
-  border-radius: 24px;
+  container-type: inline-size;
+  min-height: clamp(120px, 22cqw, 280px);
+  padding: clamp(14px, 3cqw, 32px);
+  gap: clamp(8px, 2cqw, 24px);
+  border-radius: clamp(18px, 4cqw, 34px);
 
   cursor: pointer;
   overflow: hidden;
   text-align: left;
   font-weight: 900;
+
+  /* Touch optimizations */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
 
   transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease;
 }
@@ -28,8 +35,9 @@
 }
 
 .task-btn:active {
-  transform: translateY(3px) scale(0.98);
-  filter: brightness(0.95);
+  transform: scale(0.96);
+  filter: brightness(0.93);
+  transition: transform 80ms ease, box-shadow 80ms ease, filter 80ms ease;
 }
 
 /* shine overlay */
@@ -89,7 +97,7 @@
 
 .task-btn--math-division {
   color: #fff;
-  background: linear-gradient(180deg, #cab5fb 0%, #8a70d2 55%, #45357a 100%);
+  background: linear-gradient(180deg, #cab5fb 0%, #9a83d8 55%, #534388 100%);
   box-shadow:
     0 6px 0 #332461,
     0 10px 16px rgba(90, 70, 160, 0.2),
@@ -157,11 +165,13 @@
 
 /* ── Icon circle ── */
 .task-btn__icon-circle {
-  width: 42px; height: 42px; min-width: 42px;
+  width: clamp(48px, 9cqw, 96px);
+  height: clamp(48px, 9cqw, 96px);
+  min-width: clamp(48px, 9cqw, 96px);
+  font-size: clamp(24px, 5cqw, 56px);
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.85);
   display: flex; align-items: center; justify-content: center;
-  font-size: 20px; font-weight: 900;
   flex-shrink: 0;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
@@ -234,6 +244,35 @@
   display: block;
   margin: 0 auto;
   filter: drop-shadow(0 3px 6px rgba(0,0,0,0.15));
+}
+
+/* ── Responsive (iPad) ── */
+@media (max-width: 1100px) and (pointer: coarse) {
+  .task-btn {
+    min-height: 64px;
+    padding: 14px 16px;
+    border-radius: 20px;
+  }
+
+  .task-btn__icon-circle {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    font-size: 22px;
+  }
+
+  .task-btn__title {
+    font-size: 15px;
+  }
+
+  .task-btn__subtitle {
+    font-size: 11px;
+  }
+
+  .task-btn__formula {
+    font-size: 13px;
+    padding: 3px 12px;
+  }
 }
 
 /* ── Responsive ── */

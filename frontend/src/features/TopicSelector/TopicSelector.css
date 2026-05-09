@@ -1,44 +1,137 @@
 @reference "tailwindcss";
 
+/* ── Card wrapper ── */
 .topic-selector-card {
   @apply w-full max-w-[1100px] rounded-[28px];
+  min-width: 0;
+  max-width: min(1100px, 100vw);
+  overflow-x: hidden;
+  overflow: visible;
+
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
+/* ── Inner layout ── */
 .topic-selector {
   --section-gap: 10px;
 
   @apply relative z-10 grid w-full gap-4 px-4 pt-4 pb-4;
-  grid-template-columns: 1.2fr 1fr;
-  grid-template-rows: auto minmax(0, 1fr);
-  min-height: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: clip;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: stretch;
+}
+
+/* allow grid children to shrink instead of overflowing */
+.topic-selector > * {
+  min-width: 0;
 }
 
 .topic-selector__difficulty {
-  @apply flex justify-center;
+  @apply justify-center;
   grid-column: 1 / -1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .topic-selector__section {
   @apply flex flex-col;
+  min-width: 0;
+  max-width: 100%;
+  container-type: inline-size;
 }
 
 .topic-selector__math-grid {
   @apply grid gap-[var(--section-gap)];
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  flex: 1;
 }
 
 .topic-selector__theme-grid {
   @apply grid gap-[var(--section-gap)];
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  flex: 1;
 }
 
-@media (min-width: 901px) {
-  .topic-selector-card {
-    min-height: 100%;
-  }
+/* prevent button content from forcing horizontal overflow */
+.topic-selector__math-grid .task-btn,
+.topic-selector__theme-grid .task-btn {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  height: auto;
+}
 
-  .topic-selector {
-    height: 100%;
+.task-btn__text-block {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.task-btn__title,
+.task-btn__subtitle,
+.task-btn__formula {
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.task-btn__formula {
+  white-space: normal;
+}
+
+/* ── Section headers ── */
+.topic-selector__section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  max-width: 100%;
+  margin-bottom: 10px;
+  padding: 6px 8px;
+  border-radius: 12px;
+  background: rgba(180, 150, 90, 0.266);
+}
+
+.topic-selector__section-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+.topic-selector__section-title {
+  margin: 0;
+  font-size: clamp(13px, 1.4vw, 16px);
+  font-weight: 900;
+  color: #3d2e0e;
+  line-height: 1.1;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+  overflow-wrap: break-word;
+}
+
+.topic-selector__section-sub {
+  margin: 0;
+  font-size: clamp(10px, 1vw, 12px);
+  font-weight: 700;
+  color: #7a5c28;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+
+/* ── Large screens: keep intended grid ── */
+@media (min-width: 901px) {
+  .topic-selector__section {
+    min-height: 0;
   }
 
   .topic-selector__math-grid,
@@ -50,41 +143,91 @@
   .topic-selector__theme-grid .task-btn {
     height: 100%;
   }
+
+  
 }
 
+/* ── Tablet/mobile: main sections stacked, inner button grids stay intact ── */
 @media (max-width: 900px) {
   .topic-selector {
-    height: auto;
-    min-height: auto;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto auto;
   }
 
-  .topic-selector__math-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .topic-selector__theme-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   .topic-selector__theme-grid .task-btn {
-    min-height: 150px;
+    height: auto;
   }
+
+  .topic-selector__section-title {font-size: clamp(17px, 1.4vw, 17px);}
+  .topic-selector__section-sub {font-size: clamp(14px, 1.4vw, 14px);}
 }
 
-@media (max-width: 650px) {
+/* ── Only when buttons themselves stack vertically ── */
+@media (max-width: 600px) {
   .topic-selector {
-    @apply p-3;
+    gap: 12px;
+    padding: 12px;
   }
 
   .topic-selector__math-grid,
   .topic-selector__theme-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .topic-selector__math-grid .task-btn,
   .topic-selector__theme-grid .task-btn {
-    min-height: 105px;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-height: 900px) {
+  .topic-selector {
+    gap: 10px;
+    padding: 10px;
+    align-items: stretch;
+  }
+
+  .topic-selector__section {
+    height: 100%;
+  }
+
+  .topic-selector__section-header {
+    margin-bottom: 6px;
+    padding: 4px 6px;
+  }
+
+  .topic-selector__math-grid,
+  .topic-selector__theme-grid {
+    gap: 8px;
+    height: auto;
+  }
+
+  .topic-selector__math-grid .task-btn,
+  .topic-selector__theme-grid .task-btn {
+    min-height: 0;
+    height: auto;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .task-btn__icon-circle {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    font-size: 16px;
+  }
+
+  .task-btn__title {
+    font-size: 12px;
+  }
+
+  .task-btn__subtitle {
+    font-size: 9px;
+  }
+
+  .task-btn__formula {
+    font-size: 10px;
+    padding: 2px 8px;
   }
 }

@@ -2,6 +2,8 @@
 
 .solve-page {
   font-family: 'Nunito', sans-serif;
+  min-height: 100dvh;
+  overflow-y: auto;
 }
 
 .whiteboard-shell {
@@ -22,4 +24,52 @@
   touch-action: none;
   cursor: crosshair;
   border-radius: 1.25rem;
+}
+
+.solve-area-problem {
+  grid-area: problem;
+}
+
+.solve-area-whiteboard {
+  grid-area: whiteboard;
+}
+
+.solve-area-answer {
+  grid-area: answer;
+}
+
+.solve-layout {
+  display: grid;
+  grid-template-areas:
+    "problem"
+    "whiteboard"
+    "answer";
+}
+
+@media (min-width: 900px) {
+  .solve-layout {
+    grid-template-columns: minmax(0, 42%) minmax(0, 58%);
+    grid-template-rows: auto auto;
+
+    grid-template-areas:
+      "problem whiteboard"
+      "answer  whiteboard";
+
+    align-items: stretch;
+  }
+
+  .solve-area-problem,
+  .solve-area-answer,
+  .solve-area-whiteboard {
+    min-width: 0;
+  }
+
+  .solve-area-whiteboard {
+    min-height: 0;
+    height: 100%;
+  }
+
+  .solve-area-whiteboard > * {
+    height: 100%;
+  }
 }

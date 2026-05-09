@@ -11,21 +11,22 @@ export default function ProblemSelector({
   const problems = Array.from({ length: totalProblems }, (_, i) => i + 1);
 
   return (
-    <div className="problem-selector">
-      <div className="problem-selector__row">
-        <BackButton onBack={onBack} />
+    <div className="problem-selector-wrapper">
+      <BackButton onBack={onBack} />
 
+      <div className="problem-selector">
         <SwitchButton
           selected={selectedProblem}
           onSelect={onSelectProblem}
+          change_when={1000}
           options={problems.map((num) => ({
             key: num,
             label: `${num}`,
-            color: 'blue'
+            color: 'blue',
           }))}
+          gap={5}
+          reservedWidth={70}
         />
-
-        <div className="problem-selector__spacer" />
       </div>
     </div>
   );

@@ -202,6 +202,27 @@
   text-align: center;
 }
 
+.whiteboard-shell,
+.whiteboard-area,
+.sticker-tray,
+.tray-sticker,
+.placed-sticker {
+  overscroll-behavior: contain;
+}
+
+.whiteboard-area,
+.whiteboard-canvas,
+.placed-sticker {
+  touch-action: none;
+}
+
+.tray-sticker {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 /* ─────────────────────────────────────────────
    Responsive — on very small screens stack
    the tray above the board instead

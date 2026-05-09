@@ -56,7 +56,7 @@ export default function SolveProblemPage({ onNavigate }) {
   };
 
   return (
-    <main className="solve-page relative min-h-screen overflow-hidden">
+    <main className="solve-page relative min-h-screen overflow-y-auto">
       <BackgroundLayer />
 
       <div className="solve-page__content relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-4 px-4 py-4">
@@ -67,15 +67,25 @@ export default function SolveProblemPage({ onNavigate }) {
           onBack={() => onNavigate('home')}
         />
 
-        <div className="flex w-full flex-col gap-4 lg:flex-row">
-          <section className="flex w-full flex-col gap-4 lg:w-[42%]">
-            
+        <div className="solve-layout grid w-full gap-4">
+          <section className="solve-area-problem">
             <SurfaceCard className="rounded-[1.5rem] bg-emerald-50 p-4 md:p-5">
               <p className="text-lg font-bold leading-relaxed text-slate-700 md:text-xl">
                 {problemText}
               </p>
             </SurfaceCard>
+          </section>
 
+          <section className="solve-area-whiteboard">
+            <Whiteboard
+              stickers={STICKERS}
+              tips={tips}
+              isLoadingTip={isLoadingTip}
+              onRequestTips={handleRequestTips}
+            />
+          </section>
+
+          <section className="solve-area-answer">
             <AnswerInput
               items={[
                 { key: 'red', label: 'Rot' },
@@ -85,15 +95,6 @@ export default function SolveProblemPage({ onNavigate }) {
               answers={answers}
               setAnswers={setAnswers}
               onCheck={() => console.log(answers)}
-            />
-          </section>
-
-          <section className="flex w-full lg:w-[58%]">
-            <Whiteboard
-              stickers={STICKERS}
-              tips={tips}
-              isLoadingTip={isLoadingTip}
-              onRequestTips={handleRequestTips}
             />
           </section>
         </div>
