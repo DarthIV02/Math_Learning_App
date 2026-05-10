@@ -1,7 +1,7 @@
 FROM node:20-alpine
-WORKDIR /math_problem_v2
+WORKDIR /math_learning_app
 COPY backend/package*.json ./
-RUN npm install
+RUN npm ci
 COPY backend/ .
-EXPOSE 5000
+EXPOSE 3001
 CMD ["node", "index.js"]

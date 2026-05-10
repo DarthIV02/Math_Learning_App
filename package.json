@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "dotenv": "^17.4.2",
+    "jest": "^30.4.2"
+  },
+  "dependencies": {
+    "pg": "^8.20.0",
+    "uuid": "^14.0.0"
+  }
+}

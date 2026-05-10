@@ -1,6 +1,33 @@
-const express = require('express')
-const app = express()
+const express = require('express');
+const cors = require('cors');
+const https = require('https');
+const fs = require('fs');
 
-app.get('/api/health', (req, res) => res.json({ status: 'ok' }))
+const app = express();
 
-app.listen(5000, () => console.log('API running on port 5000'))
+app.use(cors({
+  origin: [
+    'https://172.24.220.6:3000',
+    'https://localhost:3000',
+  ],
+  credentials: true,
+}));
+
+app.use(express.json());
+
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/problems', require('./routes/problems'));
+app.use('/api/attempts', require('./routes/attempts'));
+app.use('/api', require('./routes/lookups'));
+
+const PORT = process.env.PORT || 3001;
+
+https.createServer({
+  key: fs.readFileSync('./certs/key.pem'),
+  cert: fs.readFileSync('./certs/cert.pem'),
+}, app).listen(PORT, () => {
+  console.log(`HTTPS API running on port ${PORT}`);
+});

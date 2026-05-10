@@ -1,10 +1,24 @@
 {
-  "name": "backend",
+  "name": "math-learning-backend",
   "version": "1.0.0",
-  "dependencies": {
-    "express": "^4.18.0"
-  },
+  "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "npx dotenvx run --env-file=.env.test -- jest",
+    "test:watch": "npx dotenvx run --env-file=.env.test -- jest --watch"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.5",
+    "selfsigned": "^5.5.0"
+  },
+  "devDependencies": {
+    "@dotenvx/dotenvx": "^1.65.0",
+    "nodemon": "^3.1.4"
   }
 }

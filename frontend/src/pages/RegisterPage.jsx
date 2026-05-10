@@ -5,10 +5,12 @@ import AuthCard from '../features/Login/components/AuthCard/AuthCard';
 import InputField from '../components/InputField/InputField';
 import AppPresentation from '../features/Login/components/AppPresentation/AppPresentation';
 import { PrimaryButton } from '../components/Buttons/AuthButtons';
+import { useRegister } from '../hooks/useRegister';
 
 import './styles/LoginPage.css';
 
 export default function RegisterStudentPage({ onRegisterSuccess, onBackToLogin }) {
+  const { register, loading, error } = useRegister();
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -27,21 +29,10 @@ export default function RegisterStudentPage({ onRegisterSuccess, onBackToLogin }
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e?.preventDefault();
-
-    const sanitized = {
-      ...form,
-      classId: form.classId || null,
-      firstName: form.firstName || null,
-      lastName: form.lastName || null,
-      grade: Number(form.grade),
-    };
-
-    console.log('Register student:', sanitized);
-
-    // Later: call API here
-    onRegisterSuccess?.();
+    const result = await register(form);
+    if (result) onRegisterSuccess?.();
   };
 
   return (
@@ -122,7 +113,16 @@ export default function RegisterStudentPage({ onRegisterSuccess, onBackToLogin }
             </p>
           </label>
 
-          <PrimaryButton label="Registrieren" type="submit" />
+          {error && (
+            <p className="text-sm text-red-500 text-center">{error}</p>
+          )}
+
+          {/* 2. Disable button while loading: */}
+          <PrimaryButton
+            label={loading ? 'Wird registriert...' : 'Registrieren'}
+            type="submit"
+            disabled={loading}
+          />
         </form>
 
         <div className="footer flex flex-col items-center text-center mt-4 gap-1">
