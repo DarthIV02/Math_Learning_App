@@ -16,7 +16,6 @@ export default function RegisterStudentPage({ onRegisterSuccess, onBackToLogin }
     lastName: '',
     email: '',
     password: '',
-    classId: '',
     grade: '3',
   });
 
@@ -31,8 +30,12 @@ export default function RegisterStudentPage({ onRegisterSuccess, onBackToLogin }
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
+
     const result = await register(form);
-    if (result) onRegisterSuccess?.();
+
+    if (result) {
+      onRegisterSuccess?.(result);
+    }
   };
 
   return (

@@ -9,8 +9,6 @@ export default function ProfileEditForm({
   loading,
   message,
 }) {
-  const genderLabel = profile.gender === 'female' ? 'Weiblich' : 'Männlich';
-
   return (
     <SurfaceCard className="profile-edit-form">
       <p className="profile-edit-form__title">Profil bearbeiten</p>
@@ -38,14 +36,16 @@ export default function ProfileEditForm({
           label="E-Mail"
           type="email"
           value={profile.email}
-          onChange={(e) => onChange('email', e.target.value)}
+          readOnly
         />
 
         <InputField
-          label="Geschlecht"
-          value={genderLabel}
-          readOnly
-          disabled
+          label="Klassenstufe"
+          type="number"
+          value={profile.grade}
+          onChange={(e) => onChange('grade', e.target.value)}
+          min={3}
+          max={4} 
         />
 
         <InputField

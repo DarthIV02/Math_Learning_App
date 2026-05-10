@@ -9,29 +9,22 @@ import ProfileStats from '../features/Profile/ProfileStats';
 
 import './styles/ProfilePage.css';
 
-export default function ProfilePage({ onNavigate, ...props }) {
+export default function ProfilePage({ onNavigate, user, onUserUpdate }) {
   const {
-    firstName,
-    lastName,
-    email,
-    role,
-    classGrade,
-    classLabel,
+    firstName = '',
+    lastName = '',
+    email = '',
+    grade = '',
     streak = 0,
     xp = 0,
     solvedTasks = 0,
-    gender,
-  } = props;
-
-  const classDisplayName = classLabel || (classGrade ? `${classGrade}` : '');
+  } = user || {};
 
   const [profile, setProfile] = useState({
-    firstName: firstName ?? 'Max',
-    lastName: lastName ?? 'Mustermann',
-    email: email ?? 'max@example.com',
-    role: role ?? 'student',
-    klasse: classDisplayName,
-    gender: gender ?? 'male',
+    firstName,
+    lastName,
+    email,
+    grade,
     newPassword: '',
     confirmPassword: '',
   });
@@ -40,18 +33,14 @@ export default function ProfilePage({ onNavigate, ...props }) {
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
-    const updatedClass = classLabel || (classGrade ? `${classGrade}` : '');
-
     setProfile((prev) => ({
       ...prev,
-      firstName: firstName ?? prev.firstName,
-      lastName: lastName ?? prev.lastName,
-      email: email ?? prev.email,
-      role: role ?? prev.role,
-      klasse: updatedClass || prev.klasse,
-      gender: gender ?? prev.gender,
+      firstName,
+      lastName,
+      email,
+      grade,
     }));
-  }, [firstName, lastName, email, role, classGrade, classLabel, gender]);
+  }, [firstName, lastName, email, grade]);
 
   const handleChange = (key, value) => {
     setProfile((prev) => ({ ...prev, [key]: value }));
@@ -68,12 +57,27 @@ export default function ProfilePage({ onNavigate, ...props }) {
     setLoading(true);
 
     try {
+      await onUserUpdate?.({
+        ...user,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        email: profile.email,
+        grade: profile.grade,
+        newPassword: profile.newPassword,
+      });
+
       setMessage({ type: 'success', text: 'Profil erfolgreich aktualisiert.' });
+
       setProfile((prev) => ({
         ...prev,
         newPassword: '',
         confirmPassword: '',
       }));
+    } catch (err) {
+      setMessage({
+        type: 'error',
+        text: err.message || 'Profil konnte nicht aktualisiert werden.',
+      });
     } finally {
       setLoading(false);
     }
@@ -90,7 +94,6 @@ export default function ProfilePage({ onNavigate, ...props }) {
               firstName={profile.firstName}
               lastName={profile.lastName}
               email={profile.email}
-              gender={profile.gender}
             />
 
             <ProfileStats

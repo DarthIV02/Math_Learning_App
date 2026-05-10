@@ -9,13 +9,38 @@ import AppPresentation from '../features/Login/components/AppPresentation/AppPre
 import AuthCard from '../features/Login/components/AuthCard/AuthCard';
 import QRScanner from '../features/Login/components/QRScanner/QRScanner';
 
+import { loginUser } from '../api/auth';
+
 import './styles/LoginPage.css';
 
 export default function LoginPage({ onLoginSuccess, onRegister }) {
   const [showScanner, setShowScanner] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleSubmit = () => {
-    onLoginSuccess();
+  const handleSubmit = async () => {
+    setError(null);
+
+    if (!showPassword) {
+      setShowPassword(true);
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const result = await loginUser(form);
+      onLoginSuccess?.(result);
+    } catch (err) {
+      setError(err.message || 'Login fehlgeschlagen.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleQRResult = (data) => {
@@ -24,6 +49,15 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
 
     // Later: validate QR data here
     onLoginSuccess();
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   return (
@@ -43,12 +77,36 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
 
         <InputField
           label="E-Mail"
+          name="email"
           type="email"
           placeholder="name@beispiel.de"
           autoComplete="email"
+          value={form.email}
+          onChange={handleChange}
         />
 
-        <PrimaryButton label="Anmelden" type="submit" onClick={handleSubmit} />
+        {showPassword && (
+          <InputField
+            label="Passwort"
+            name="password"
+            type="password"
+            placeholder="••••••••"
+            autoComplete="current-password"
+            value={form.password}
+            onChange={handleChange}
+          />
+        )}
+
+        {error && (
+          <p className="text-sm text-red-500 text-center">{error}</p>
+        )}
+
+        <PrimaryButton
+          label={loading ? 'Einloggen...' : showPassword ? 'Einloggen' : 'Weiter'}
+          type="button"
+          onClick={handleSubmit}
+          disabled={loading}
+        />
 
         <QRButton onClick={() => setShowScanner(true)} />
 

@@ -31,6 +31,15 @@ router.get('/:id', authMiddleware, async (req, res) => {
   }
 });
 
+router.put('/:id', authMiddleware, async (req, res) => {
+  try {
+    const user = await userService.updateUser(req.params.id, req.body);
+    res.json({ user });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     await userService.deleteUser(req.params.id);

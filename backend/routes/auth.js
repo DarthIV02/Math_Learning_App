@@ -20,8 +20,8 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   try {
-    const { username, password, display_name } = req.body;
-    const { created, payload } = await loginOrRegister(username, password, display_name);
+    const { email, password } = req.body;
+    const { created, payload } = await loginOrRegister(email, password);
     res.status(created ? 201 : 200).json(payload);
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });

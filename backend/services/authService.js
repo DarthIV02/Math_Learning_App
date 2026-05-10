@@ -12,7 +12,14 @@ function makeToken(user) {
 }
 
 function formatUser(user) {
-  return { id: user.id, display_name: user.display_name };
+  return { 
+    id: user.id,
+    display_name: user.display_name,
+    firstName: user.firstname,
+    lastName: user.lastname,
+    email: user.email,
+    grade: user.grade,
+  };
 }
 
 async function registerStudent({ firstName, lastName, email, password, grade }) {
@@ -29,7 +36,7 @@ async function registerStudent({ firstName, lastName, email, password, grade }) 
   const result = await db.query(
     `INSERT INTO users (firstname, lastname, email, password_hash, grade, auth_type, created_by)
      VALUES ($1, $2, $3, $4, $5, 'password', 'self')
-     RETURNING id, firstname, lastname, email, auth_type`,
+     RETURNING id, firstname, lastname, email, grade, auth_type`,
     [firstName || null, lastName || null, email, hash, String(grade)]
   );
 
@@ -39,35 +46,36 @@ async function registerStudent({ firstName, lastName, email, password, grade }) 
   return { token: makeToken(user), user: formatUser(user) };
 }
 
-async function loginOrRegister(username, password, display_name) {
-  const existing = await db.query('SELECT * FROM users WHERE username = $1', [username]);
+async function loginOrRegister(email, password) {
+  const existing = await db.query('SELECT * FROM users WHERE email = $1', [email]);
 
-  if (existing.rows.length) {
-    const user = existing.rows[0];
-    const valid = await bcrypt.compare(password, user.password_hash);
-    if (!valid) {
-      const err = new Error('Invalid credentials');
-      err.status = 401;
-      throw err;
-    }
-    return { created: false, payload: { token: makeToken(user), user: formatUser(user) } };
-  }
-
-  if (!display_name) {
-    const err = new Error('display_name is required for new users');
-    err.status = 400;
+  if (!existing.rows.length) {
+    const err = new Error('Invalid email or password');
+    err.status = 401;
     throw err;
   }
 
-  const hash = await bcrypt.hash(password, 10);
-  const result = await db.query(
-    `INSERT INTO users (display_name, auth_type, username, password_hash)
-     VALUES ($1, 'password', $2, $3)
-     RETURNING id, display_name, auth_type`,
-    [display_name, username, hash]
-  );
-  const user = result.rows[0];
-  return { created: true, payload: { token: makeToken(user), user: formatUser(user) } };
+  const user = existing.rows[0];
+
+  const valid = await bcrypt.compare(password, user.password_hash);
+
+  if (!valid) {
+    const err = new Error('Invalid email or password');
+    err.status = 401;
+    throw err;
+  }
+
+  user.display_name =
+    `${user.firstname || ''} ${user.lastname || ''}`.trim() ||
+    user.email;
+
+  return {
+    created: false,
+    payload: {
+      token: makeToken(user),
+      user: formatUser(user),
+    },
+  };
 }
 
 async function qrLogin(qr_token) {
