@@ -33,7 +33,7 @@ export default function ProfileEditForm({
         />
 
         <InputField
-          label="E-Mail"
+          label="E-Mail oder Username"
           type="email"
           value={profile.email}
           readOnly

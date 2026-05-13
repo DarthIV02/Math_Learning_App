@@ -13,7 +13,7 @@ import { loginUser } from '../api/auth';
 
 import './styles/LoginPage.css';
 
-export default function LoginPage({ onLoginSuccess, onRegister }) {
+export default function LoginPage({ onLoginSuccess, onRegister, onRegisterClass }) {
   const [showScanner, setShowScanner] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
@@ -76,7 +76,7 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
         </div>
 
         <InputField
-          label="E-Mail"
+          label="E-Mail oder Username"
           name="email"
           type="email"
           placeholder="name@beispiel.de"
@@ -122,6 +122,20 @@ export default function LoginPage({ onLoginSuccess, onRegister }) {
               }}
             >
               Registrieren {'>'}
+            </a>
+          </p>
+
+          <p className="text-sm text-slate-600">
+            Für Lehrkräfte?{' '}
+            <a
+              href="#"
+              className="font-semibold text-blue-600 hover:text-blue-700"
+              onClick={(e) => {
+                e.preventDefault();
+                onRegisterClass?.();
+              }}
+            >
+              Eine Klasse registrieren {'>'}
             </a>
           </p>
 

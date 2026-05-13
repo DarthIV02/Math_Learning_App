@@ -110,10 +110,6 @@ export default function RegisterStudentPage({ onRegisterSuccess, onBackToLogin }
               <option value="3">3. Klasse</option>
               <option value="4">4. Klasse</option>
             </select>
-
-            <p className="mt-1 ml-1 text-xs text-slate-500">
-              Falls keine Klassen-ID vorhanden ist, wird diese Stufe für dich hinterlegt.
-            </p>
           </label>
 
           {error && (

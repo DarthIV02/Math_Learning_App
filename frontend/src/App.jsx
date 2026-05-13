@@ -9,6 +9,7 @@ import ProfilePage from './pages/ProfilePage';
 import SolveProblemsPage from './pages/SolveProblemsPage';
 import SelectTopic from './pages/SelectTopicPage';
 import RegisterStudentPage from './pages/RegisterPage';
+import RegisterClassPage from './pages/RegisterClass';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -26,6 +27,10 @@ function App() {
     setCurrentPage('home');
   };
 
+  const handleRegisterClassSuccess = (result) => {
+    setCurrentPage('login');
+  };
+
   const handleUserUpdate = async (updatedUser) => {
     const savedUser = await updateUser(user.id, {
       firstName: updatedUser.firstName,
@@ -39,19 +44,29 @@ function App() {
   };
 
   if (!isLoggedIn) {
-  if (currentPage === 'register') {
-      return (
-         <RegisterStudentPage
-            onRegisterSuccess={handleAuthSuccess}
-            onBackToLogin={() => setCurrentPage('login')}
-          />
-      );
-    }
+    if (currentPage === 'register') {
+        return (
+          <RegisterStudentPage
+              onRegisterSuccess={handleAuthSuccess}
+              onBackToLogin={() => setCurrentPage('login')}
+            />
+        );
+      }
+
+    if (currentPage === 'register_class') {
+        return (
+          <RegisterClassPage
+              onRegisterSuccess={handleRegisterClassSuccess}
+              onBackToLogin={() => setCurrentPage('login')}
+            />
+        );
+      }
 
     return (
       <LoginPage
         onLoginSuccess={handleAuthSuccess}
         onRegister={() => setCurrentPage('register')}
+        onRegisterClass={() => setCurrentPage('register_class')}
       />
     );
   }
