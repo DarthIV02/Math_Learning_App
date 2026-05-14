@@ -21,3 +21,24 @@ export async function updateUser(userId, data, token) {
 
   return result.user || result;
 }
+
+export async function uploadAvatar(file, token) {
+  const formData = new FormData();
+  formData.append('avatar', file);
+
+  const res = await fetch(`${BASE_URL}/users/me/avatar`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.error || 'Avatar upload failed');
+  }
+
+  return data;
+}

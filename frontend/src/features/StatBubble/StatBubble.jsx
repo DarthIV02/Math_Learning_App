@@ -1,9 +1,14 @@
 import './StatBubble.css';
 import SurfaceCard from '../../components/SurfaceCard/SurfaceCard.jsx';
 import { getAvatarSrc } from '../../lib/avatar';
+import { useEffect, useState } from 'react';
 
-export default function StatBubble({ coins = 0 }) {
-  const avatar = getAvatarSrc();
+export default function StatBubble({ coins = 0, user }) {
+  const [avatar, setAvatar] = useState(getAvatarSrc());
+
+  useEffect(() => {
+    setAvatar(getAvatarSrc(user));
+  }, [user]);
 
   return (
     <SurfaceCard className='stat-bubble' soft={true}>
@@ -16,7 +21,11 @@ export default function StatBubble({ coins = 0 }) {
 
       <div className="stat-bubble__avatar-shell">
         <div className="stat-bubble__avatar-inner">
-          <img src={avatar} alt="Kinderprofil" className="stat-bubble__avatar" />
+          <img
+            src={avatar}
+            alt="Kinderprofil"
+            className="stat-bubble__avatar"
+          />
         </div>
       </div>
     </SurfaceCard>

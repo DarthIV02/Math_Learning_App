@@ -8,6 +8,46 @@
   @apply h-14 w-14 rounded-full border border-white bg-white object-contain shadow;
 }
 
+.profile-card__avatar-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Hide the actual file input visually */
+.profile-card__avatar-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The always-visible camera badge */
+.profile-card__avatar-edit {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--surface-color, white);
+  border: 1.5px solid var(--border-color, #e0e0e0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary-color, #666);
+  transition: background 0.15s, color 0.15s;
+}
+
+.profile-card__avatar-edit:hover,
+.profile-card__avatar-edit:focus-visible {
+  background: var(--primary-color, #4f46e5);
+  color: white;
+  border-color: transparent;
+  outline: none;
+}
+
 .profile-card__info {
   @apply min-w-0;
 }

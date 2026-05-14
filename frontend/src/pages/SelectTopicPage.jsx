@@ -9,7 +9,7 @@ import StatBubble from '../features/StatBubble/StatBubble';
 import TopicSelector from '../features/TopicSelector/TopicSelector';
 import hedgehog from '../assets/images/hedgehog_v2.png';
 
-export default function SelectTopicPage({ onNavigate }) {
+export default function SelectTopicPage({ onNavigate, user }) {
   return (
     <DifficultyProvider>
       <div className="select-topic-page">
@@ -24,7 +24,7 @@ export default function SelectTopicPage({ onNavigate }) {
                   <span>Du kannst ihn jederzeit ändern!</span>
                 </div>
               </SurfaceCard>
-              <StatBubble coins={6} />
+              <StatBubble coins={6} user={user}/>
             </header>
 
           <main className="select-topic-page__main">

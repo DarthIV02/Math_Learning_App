@@ -44,6 +44,17 @@ async function getUserWithStats(id) {
   return { ...user.rows[0], stats: stats.rows[0] };
 }
 
+async function getUserById(id) {
+  const result = await db.query(
+    `SELECT *
+     FROM users
+     WHERE id = $1`,
+    [id]
+  );
+
+  return result.rows[0];
+}
+
 async function updateUser(id, data) {
   const {
     firstName,
@@ -97,8 +108,26 @@ async function updateUser(id, data) {
   };
 }
 
+async function updateAvatar(userId, avatarUrl) {
+  const result = await db.query(
+    `UPDATE users
+     SET avatar_url = $1
+     WHERE id = $2
+     RETURNING id, firstname, lastname, email, grade, avatar_url`,
+    [avatarUrl, userId]
+  );
+
+  if (!result.rows.length) {
+    const err = new Error('User not found');
+    err.status = 404;
+    throw err;
+  }
+
+  return result.rows[0];
+}
+
 async function deleteUser(id) {
   await db.query('DELETE FROM users WHERE id = $1', [id]);
 }
 
-module.exports = { createQrUser, listUsers, getUserWithStats, updateUser, deleteUser };
+module.exports = { createQrUser, listUsers, getUserWithStats, getUserById, updateUser, updateAvatar, deleteUser };

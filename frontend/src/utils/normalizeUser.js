@@ -8,4 +8,5 @@ export const normalizeUser = (user = {}) => ({
     `${user.firstName ?? user.firstname ?? ''} ${user.lastName ?? user.lastname ?? ''}`.trim(),
   email: user.email ?? '',
   grade: user.grade ?? '3',
+  avatarUrl: user.avatarUrl ?? user.avatar_url ?? null,
 });

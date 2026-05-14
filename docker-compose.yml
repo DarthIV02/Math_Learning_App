@@ -28,9 +28,12 @@ services:
       DATABASE_URL: postgres://mathapp:mathapp_secret@db:5432/mathapp
       JWT_SECRET: change_this_in_production
       PORT: 3001
+      FRONTEND_URL: https://127.0.0.1:3000
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+    - ./backend/uploads:/app/uploads
 
 volumes:
   pgdata:

@@ -7,9 +7,12 @@ import ProfileCard from '../features/Profile/ProfileCard';
 import ProfileEditForm from '../features/Profile/ProfileEditForm';
 import ProfileStats from '../features/Profile/ProfileStats';
 
+import { uploadAvatar } from '../api/users';
+import { saveAvatarUrl } from '../lib/avatar';
+
 import './styles/ProfilePage.css';
 
-export default function ProfilePage({ onNavigate, user, onUserUpdate }) {
+export default function ProfilePage({ onNavigate, user, token, onUserUpdate, onLogout }) {
   const {
     firstName = '',
     lastName = '',
@@ -31,6 +34,7 @@ export default function ProfilePage({ onNavigate, user, onUserUpdate }) {
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
+  const [avatarSrc, setAvatarSrcState] = useState(null);
 
   useEffect(() => {
     setProfile((prev) => ({
@@ -41,6 +45,39 @@ export default function ProfilePage({ onNavigate, user, onUserUpdate }) {
       grade,
     }));
   }, [firstName, lastName, email, grade]);
+
+  const handleAvatarChange = async (file) => {
+    setMessage(null);
+
+    try {
+      const previewUrl = URL.createObjectURL(file);
+      setAvatarSrcState(previewUrl);
+
+      const response = await uploadAvatar(file, token);
+      const savedUser = response.user || response;
+
+      const newAvatarUrl = savedUser.avatar_url || savedUser.avatarUrl;
+
+      if (newAvatarUrl) {
+        saveAvatarUrl(newAvatarUrl);
+      }
+
+      await onUserUpdate?.({
+        ...user,
+        avatarUrl: newAvatarUrl,
+      });
+
+      setMessage({
+        type: 'success',
+        text: 'Profilbild aktualisiert.',
+      });
+    } catch (err) {
+      setMessage({
+        type: 'error',
+        text: err.message || 'Profilbild konnte nicht hochgeladen werden.',
+      });
+    }
+  };
 
   const handleChange = (key, value) => {
     setProfile((prev) => ({ ...prev, [key]: value }));
@@ -83,6 +120,14 @@ export default function ProfilePage({ onNavigate, user, onUserUpdate }) {
     }
   };
 
+  const API_ORIGIN = import.meta.env.VITE_API_URL
+    ? import.meta.env.VITE_API_URL.replace('/api', '')
+    : `${window.location.protocol}//${window.location.hostname}:3001`;
+
+  const fullAvatarUrl = user?.avatarUrl
+    ? `${API_ORIGIN}${user.avatarUrl}`
+    : null;
+
   return (
     <div className="profile-page">
       <BackgroundLayer />
@@ -94,6 +139,8 @@ export default function ProfilePage({ onNavigate, user, onUserUpdate }) {
               firstName={profile.firstName}
               lastName={profile.lastName}
               email={profile.email}
+              avatarSrc={avatarSrc || fullAvatarUrl}
+              onAvatarChange={handleAvatarChange}
             />
 
             <ProfileStats
@@ -109,6 +156,17 @@ export default function ProfilePage({ onNavigate, user, onUserUpdate }) {
               loading={loading}
               message={message}
             />
+
+            <button
+              onClick={onLogout}
+              className="
+                w-full mt-4 py-3 rounded-2xl
+                bg-red-500 text-white font-semibold
+                hover:bg-red-600 transition-all
+              "
+            >
+              Abmelden
+            </button>
           </div>
         </main>
 

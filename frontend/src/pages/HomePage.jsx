@@ -20,7 +20,7 @@ export default function HomePage({ onNavigate, user }) {
             <p className="home-page__greeting-subtitle">Bereit für eine Knobelei?</p>
           </SurfaceCard>
           
-          <StatBubble coins={6} />
+          <StatBubble coins={6} user={user}/>
         </header>
 
         <main className="home-page__scroll">

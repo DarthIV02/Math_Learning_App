@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { generateCredentialPdf } = require('../services/pdfService');
 
 const {
   loginOrRegister,
@@ -69,11 +70,22 @@ router.post('/register_class', async (req, res) => {
       students,
     });
 
-    res.status(201).json(result);
+    const pdfBuffer = await generateCredentialPdf({
+      classInfo: result.class,
+      students: result.students,
+    });
+
+    const safeClassName = result.class.name.replace(/[^a-z0-9]/gi, '_');
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${safeClassName}_credentials.pdf"`
+    );
+
+    res.send(pdfBuffer);
 
   } catch (err) {
-
-    // PostgreSQL unique violation
     if (err.code === '23505') {
       return res.status(409).json({
         error: 'Class name already exists',

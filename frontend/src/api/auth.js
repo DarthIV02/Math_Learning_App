@@ -22,9 +22,24 @@ export async function registerClass({ className, grade, students }) {
     body: JSON.stringify({ className, grade, students }),
   });
 
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Registration failed');
-  return data;
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error || 'Registration failed');
+  }
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${className}_credentials.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  window.URL.revokeObjectURL(url);
+
+  return { success: true };
 }
 
 export async function loginUser({ email, password }) {
@@ -40,6 +55,42 @@ export async function loginUser({ email, password }) {
 
   if (!response.ok) {
     throw new Error(result.error || 'Login fehlgeschlagen.');
+  }
+
+  return result;
+}
+
+export async function qrLogin(qrToken) {
+  const response = await fetch(`${BASE_URL}/auth/qr`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ qr_token: qrToken }),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || 'QR Login fehlgeschlagen.');
+  }
+
+  return result;
+}
+
+export async function guestLogin() {
+  const response = await fetch(`${BASE_URL}/auth/anonymous`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ display_name: 'Gast' }),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || 'Gast-Login fehlgeschlagen.');
   }
 
   return result;

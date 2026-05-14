@@ -63,11 +63,13 @@ export default function RegisterStudentPage({ onRegisterSuccess, onBackToLogin }
   const handleSubmit = async (e) => {
     e?.preventDefault();
 
-    const result = await register(form, klasse=true);
+    const result = await register(form, true);
 
     if (result) {
       onRegisterSuccess?.(result);
     }
+
+    
   };
 
   return (

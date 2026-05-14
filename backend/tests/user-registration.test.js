@@ -47,6 +47,18 @@ const teacherCreatedUser = (classId, overrides = {}) => ({
   ...overrides,
 });
 
+const anonymousUser = (overrides = {}) => ({
+  firstname: 'Gast',
+  lastname: `guest_${uuidv4()}`,
+  email: `guest_${uuidv4()}`,
+  password_hash: null,
+  grade: '3',
+  class_id: null,
+  auth_type: 'anonymous',
+  created_by: 'self',
+  ...overrides,
+});
+
 const insertClass = ({ name, grade }) =>
   query(
     `INSERT INTO classes (name, grade)
@@ -92,7 +104,13 @@ beforeAll(async () => {
 });
 
 afterEach(async () => {
-  await query(`DELETE FROM users WHERE email LIKE 'student_%' OR email LIKE '%@example.com'`);
+  await query(`
+    DELETE FROM users
+    WHERE email LIKE 'student_%'
+       OR email LIKE 'guest_%'
+       OR email LIKE '%@example.com'
+  `);
+
   await query(`DELETE FROM classes WHERE name LIKE 'Klasse_%'`);
 });
 
@@ -202,11 +220,11 @@ describe('Self-registered users', () => {
 });
 
 // ─────────────────────────────────────────────
-// Teacher-created users
+// Teacher-created QR users
 // ─────────────────────────────────────────────
 
-describe('Teacher-created users', () => {
-  test('inserts teacher-created QR user with class_id', async () => {
+describe('Teacher-created QR users', () => {
+  test('inserts teacher-created QR user with class_id and QR token', async () => {
     const { rows: classRows } = await insertClass(makeClass());
     const classId = classRows[0].id;
 
@@ -226,6 +244,55 @@ describe('Teacher-created users', () => {
 
     expect(rows[0].id).toBeDefined();
     expect(rows[0].qr_token).toBeDefined();
+    expect(rows[0].qr_generated_at).toBeDefined();
+  });
+
+  test('QR token is unique for each teacher-created student', async () => {
+    const { rows: classRows } = await insertClass(makeClass());
+    const classId = classRows[0].id;
+
+    const { rows: rows1 } = await insertUser(teacherCreatedUser(classId));
+    const { rows: rows2 } = await insertUser(teacherCreatedUser(classId));
+
+    expect(rows1[0].qr_token).toBeDefined();
+    expect(rows2[0].qr_token).toBeDefined();
+    expect(rows1[0].qr_token).not.toBe(rows2[0].qr_token);
+  });
+
+  test('can find QR user by qr_token for login', async () => {
+    const { rows: classRows } = await insertClass(makeClass());
+    const classId = classRows[0].id;
+
+    const { rows } = await insertUser(teacherCreatedUser(classId));
+    const qrToken = rows[0].qr_token;
+
+    const loginResult = await query(
+      `SELECT id, firstname, lastname, email, grade, auth_type
+       FROM users
+       WHERE qr_token = $1 AND auth_type = 'qr'`,
+      [qrToken]
+    );
+
+    expect(loginResult.rows).toHaveLength(1);
+    expect(loginResult.rows[0]).toMatchObject({
+      id: rows[0].id,
+      firstname: rows[0].firstname,
+      lastname: rows[0].lastname,
+      email: rows[0].email,
+      grade: rows[0].grade,
+      auth_type: 'qr',
+    });
+  });
+
+  test('does not find QR login user with invalid qr_token', async () => {
+    const loginResult = await query(
+      `SELECT id
+       FROM users
+       WHERE qr_token = $1 AND auth_type = 'qr'`,
+      [uuidv4()]
+    );
+
+    expect(loginResult.rows).toHaveLength(0);
   });
 
   test('allows multiple students in the same class', async () => {
@@ -304,6 +371,67 @@ describe('Teacher-created users', () => {
 });
 
 // ─────────────────────────────────────────────
+// Anonymous guest users
+// ─────────────────────────────────────────────
+
+describe('Anonymous guest users', () => {
+  test('inserts anonymous guest user without password_hash', async () => {
+    const user = anonymousUser();
+    const { rows } = await insertUser(user);
+
+    expect(rows[0]).toMatchObject({
+      firstname: user.firstname,
+      lastname: user.lastname,
+      email: user.email,
+      password_hash: null,
+      grade: '3',
+      class_id: null,
+      auth_type: 'anonymous',
+      created_by: 'self',
+    });
+
+    expect(rows[0].id).toBeDefined();
+  });
+
+  test('anonymous guest user still gets a qr_token by default', async () => {
+    const user = anonymousUser();
+    const { rows } = await insertUser(user);
+
+    expect(rows[0].qr_token).toBeDefined();
+  });
+
+  test('fails anonymous guest with duplicate generated email', async () => {
+    const user = anonymousUser();
+
+    await insertUser(user);
+
+    await expect(
+      insertUser(anonymousUser({ email: user.email }))
+    ).rejects.toThrow(/unique/i);
+  });
+
+  test('fails anonymous guest with invalid grade', async () => {
+    await expect(
+      insertUser(anonymousUser({ grade: '7' }))
+    ).rejects.toThrow(/check/i);
+  });
+
+  test('anonymous user does not require password_hash even when created_by is self', async () => {
+    const user = anonymousUser({
+      password_hash: null,
+      created_by: 'self',
+      auth_type: 'anonymous',
+    });
+
+    const { rows } = await insertUser(user);
+
+    expect(rows[0].auth_type).toBe('anonymous');
+    expect(rows[0].created_by).toBe('self');
+    expect(rows[0].password_hash).toBe(null);
+  });
+});
+
+// ─────────────────────────────────────────────
 // Auth constraints
 // ─────────────────────────────────────────────
 
@@ -345,6 +473,18 @@ describe('Auth constraints', () => {
         })
       )
     ).rejects.toThrow(/self_registered_requires_password|password_auth_requires_hash/i);
+  });
+
+  test('anonymous auth does not require password_hash', async () => {
+    const user = anonymousUser({
+      auth_type: 'anonymous',
+      password_hash: null,
+    });
+
+    const { rows } = await insertUser(user);
+
+    expect(rows[0].auth_type).toBe('anonymous');
+    expect(rows[0].password_hash).toBe(null);
   });
 
   test('cannot switch qr user to password auth without password_hash', async () => {

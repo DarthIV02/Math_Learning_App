@@ -9,7 +9,7 @@ import AppPresentation from '../features/Login/components/AppPresentation/AppPre
 import AuthCard from '../features/Login/components/AuthCard/AuthCard';
 import QRScanner from '../features/Login/components/QRScanner/QRScanner';
 
-import { loginUser } from '../api/auth';
+import { loginUser, qrLogin, guestLogin } from '../api/auth';
 
 import './styles/LoginPage.css';
 
@@ -43,12 +43,54 @@ export default function LoginPage({ onLoginSuccess, onRegister, onRegisterClass 
     }
   };
 
-  const handleQRResult = (data) => {
-    console.log('QR scanned:', data);
-    setShowScanner(false);
+  const handleQRResult = async (data) => {
+    setError(null);
+    setLoading(true);
 
-    // Later: validate QR data here
-    onLoginSuccess();
+    try {
+      let qrToken = data;
+
+      // If QR contains full URL like:
+      // https://127.0.0.1:3000/qr-login?token=...
+      if (data.startsWith('http')) {
+        const url = new URL(data);
+        qrToken = url.searchParams.get('token');
+      }
+
+      if (!qrToken) {
+        throw new Error('Ungültiger QR-Code.');
+      }
+
+      const result = await qrLogin(qrToken);
+
+      localStorage.setItem('token', result.token);
+
+      setShowScanner(false);
+      onLoginSuccess?.(result);
+
+    } catch (err) {
+      setShowScanner(false);
+      setError(err.message || 'QR Login fehlgeschlagen.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      const result = await guestLogin();
+
+      localStorage.setItem('token', result.token);
+
+      onLoginSuccess?.(result);
+    } catch (err) {
+      setError(err.message || 'Gast-Login fehlgeschlagen.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -146,7 +188,7 @@ export default function LoginPage({ onLoginSuccess, onRegister, onRegisterClass 
               className="font-semibold text-blue-600 hover:text-blue-700"
               onClick={(e) => {
                 e.preventDefault();
-                handleSubmit(); // same as "Anmelden"
+                handleGuestLogin();
               }}
             >
               Als Gast fortfahren {'>'}

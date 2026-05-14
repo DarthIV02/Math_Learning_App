@@ -21,6 +21,7 @@ function formatUser(user) {
     lastName: user.lastname,
     email: user.email,
     grade: user.grade,
+    avatarUrl: user.avatar_url,
   };
 }
 
@@ -33,7 +34,7 @@ function generateUsername(firstName, lastName) {
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '');
 
-  const random = crypto.randomBytes(3).toString('hex');
+  const random = crypto.randomBytes(1).toString('hex');
 
   return `${cleanFirst}.${cleanLast || 'user'}.${random}`;
 }
@@ -136,15 +137,20 @@ async function registerClass({ className, grade, students }) {
 
       createdStudents.push({
         id: result.rows[0].id,
+
+        name: `${result.rows[0].firstname || ''} ${result.rows[0].lastname || ''}`.trim(),
         firstName: result.rows[0].firstname,
         lastName: result.rows[0].lastname,
+
         username: result.rows[0].email,
-        email: result.rows[0].email,
         password,
+
+        qrToken: result.rows[0].qr_token,
+        qrLoginUrl: `${process.env.FRONTEND_URL || 'https://127.0.0.1:3000'}/qr-login?token=${result.rows[0].qr_token}`,
+
         grade: result.rows[0].grade,
         classId: result.rows[0].class_id,
         authType: result.rows[0].auth_type,
-        qrToken: result.rows[0].qr_token,
       });
     }
 
@@ -212,36 +218,84 @@ async function loginOrRegister(email, password) {
 
 async function qrLogin(qr_token) {
   const result = await db.query(
-    `SELECT id, display_name, auth_type FROM users
+    `SELECT id, firstname, lastname, email, grade, auth_type, avatar_url
+     FROM users
      WHERE qr_token = $1 AND auth_type = 'qr'`,
     [qr_token]
   );
+
   if (!result.rows.length) {
     const err = new Error('Invalid QR code');
     err.status = 401;
     throw err;
   }
+
   const user = result.rows[0];
+
+  user.display_name =
+    `${user.firstname || ''} ${user.lastname || ''}`.trim() ||
+    user.email;
+
   await db.query('INSERT INTO sessions (user_id) VALUES ($1)', [user.id]);
-  return { token: makeToken(user), user: formatUser(user) };
+
+  return {
+    token: makeToken(user),
+    user: formatUser(user),
+  };
 }
 
-async function anonymousLogin(display_name) {
+async function anonymousLogin(display_name = 'Gast') {
+  const guestId = crypto.randomBytes(4).toString('hex');
+
+  const firstname = display_name || 'Gast';
+  const lastname = guestId;
+  const email = `guest_${guestId}`;
+  const grade = '3';
+
   const result = await db.query(
-    `INSERT INTO users (display_name, auth_type)
-     VALUES ($1, 'anonymous')
-     RETURNING id, display_name, auth_type`,
-    [display_name]
+    `INSERT INTO users 
+      (firstname, lastname, email, grade, auth_type, created_by)
+     VALUES 
+      ($1, $2, $3, $4, 'anonymous', 'self')
+     RETURNING id, firstname, lastname, email, grade, auth_type, avatar_url`,
+    [firstname, lastname, email, grade]
   );
+
   const user = result.rows[0];
-  return { token: makeToken(user), user: formatUser(user) };
+
+  user.display_name = 'Gast';
+
+  return {
+    token: makeToken(user),
+    user: formatUser(user),
+  };
 }
 
 async function logout(user_id) {
-  await db.query(
-    `UPDATE sessions SET ended_at = NOW() WHERE user_id = $1 AND ended_at IS NULL`,
+  const result = await db.query(
+    `SELECT id, auth_type, email
+     FROM users
+     WHERE id = $1`,
     [user_id]
   );
+
+  if (!result.rows.length) return;
+
+  const user = result.rows[0];
+
+  await db.query(
+    `UPDATE sessions 
+     SET ended_at = NOW() 
+     WHERE user_id = $1 AND ended_at IS NULL`,
+    [user_id]
+  );
+
+  if (user.auth_type === 'anonymous' && user.email.startsWith('guest_')) {
+    await db.query(
+      `DELETE FROM users WHERE id = $1`,
+      [user_id]
+    );
+  }
 }
 
 module.exports = {
