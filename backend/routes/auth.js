@@ -164,8 +164,10 @@ router.post('/anonymous', async (req, res) => {
     res.json(payload);
 
   } catch (err) {
-    res.status(err.status || 500).json({
+    console.error('ANONYMOUS AUTH ERROR:', err);
+    res.status(500).json({
       error: err.message,
+      stack: err.stack,
     });
   }
 });
