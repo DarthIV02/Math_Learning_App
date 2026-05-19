@@ -95,3 +95,31 @@ export async function guestLogin() {
 
   return result;
 }
+
+export async function logoutUser() {
+  const response = await fetch(`${BASE_URL}/auth/logout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    let message = 'Logout fehlgeschlagen.';
+
+    try {
+      const result = await response.json();
+      message = result.error || message;
+    } catch {
+      // ignore non-JSON response
+    }
+
+    throw new Error(message);
+  }
+
+  try {
+    return await response.json();
+  } catch {
+    return { success: true };
+  }
+}

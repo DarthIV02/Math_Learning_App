@@ -100,30 +100,6 @@ function App() {
     setUser(normalizedUser);
   };
 
-  const handleLogout = async () => {
-    try {
-      await fetch(
-        `${window.location.protocol}//${window.location.hostname}:3001/api/auth/logout`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-    } catch (err) {
-      console.error(err);
-    }
-
-    localStorage.removeItem('avatarUrl');
-    localStorage.removeItem('token');
-
-    setUser(null);
-    setToken(null);
-    setIsLoggedIn(false);
-    handleNavigate('login');
-  };
-
   const handleNavigate = (page, state = {}) => {
     setCurrentPage(page);
     setPageState(state);
@@ -166,7 +142,6 @@ function App() {
             token={token}
             onUserUpdate={handleUserUpdate}
             onNavigate={handleNavigate}
-            onLogout={handleLogout}
           />
         );
       case 'solve-problems':

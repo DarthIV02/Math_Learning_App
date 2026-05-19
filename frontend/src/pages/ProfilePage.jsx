@@ -8,6 +8,7 @@ import ProfileEditForm from '../features/Profile/ProfileEditForm';
 import ProfileStats from '../features/Profile/ProfileStats';
 
 import { uploadAvatar } from '../api/users';
+import { logoutUser } from '../api/auth';
 import { saveAvatarUrl } from '../lib/avatar';
 
 import './styles/ProfilePage.css';
@@ -120,9 +121,15 @@ export default function ProfilePage({ onNavigate, user, token, onUserUpdate, onL
     }
   };
 
-  const API_ORIGIN = import.meta.env.VITE_API_URL
-    ? import.meta.env.VITE_API_URL.replace('/api', '')
-    : `${window.location.protocol}//${window.location.hostname}:3001`;
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch (err) {
+      console.error('Logout failed:', err);
+    } finally {
+      onLogout?.();
+    }
+  };
 
   const fullAvatarUrl = user?.avatarUrl
     ? `${API_ORIGIN}${user.avatarUrl}`
@@ -158,7 +165,7 @@ export default function ProfilePage({ onNavigate, user, token, onUserUpdate, onL
             />
 
             <button
-              onClick={onLogout}
+              onClick={handleLogout}
               className="
                 w-full mt-4 py-3 rounded-2xl
                 bg-red-500 text-white font-semibold
