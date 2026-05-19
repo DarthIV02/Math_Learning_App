@@ -96,11 +96,12 @@ export async function guestLogin() {
   return result;
 }
 
-export async function logoutUser() {
+export async function logoutUser(token) {
   const response = await fetch(`${BASE_URL}/auth/logout`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -110,9 +111,7 @@ export async function logoutUser() {
     try {
       const result = await response.json();
       message = result.error || message;
-    } catch {
-      // ignore non-JSON response
-    }
+    } catch {}
 
     throw new Error(message);
   }

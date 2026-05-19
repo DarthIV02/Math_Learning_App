@@ -123,7 +123,7 @@ export default function ProfilePage({ onNavigate, user, token, onUserUpdate, onL
 
   const handleLogout = async () => {
     try {
-      await logoutUser();
+      await logoutUser(token);
     } catch (err) {
       console.error('Logout failed:', err);
     } finally {
