@@ -10,9 +10,11 @@ app.use(cors({
   origin: [
     'https://172.24.220.6:3000',
     'https://131.159.198.187:3000',
+    'https://131.159.197.60:3000',
     'https://192.168.1.103:3000',
     'https://localhost:3000',
     'https://127.0.0.1:3000',
+    'https://math-learning-app-two.vercel.app'
   ],
   credentials: true,
 }));
@@ -33,9 +35,6 @@ app.use('/api', require('./routes/lookups'));
 
 const PORT = process.env.PORT || 3001;
 
-https.createServer({
-  key: fs.readFileSync('./certs/key.pem'),
-  cert: fs.readFileSync('./certs/cert.pem'),
-}, app).listen(PORT, () => {
-  console.log(`HTTPS API running on port ${PORT}`);
+app.listen(PORT, () => {
+  console.log(`API running on port ${PORT}`);
 });
