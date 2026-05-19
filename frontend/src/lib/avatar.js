@@ -2,7 +2,7 @@ const API_BASE = import.meta.env.VITE_API_URL
   ? import.meta.env.VITE_API_URL.replace('/api', '')
   : `${window.location.protocol}//${window.location.hostname}:3001`;
 
-const DEFAULT_AVATAR = '/uploads/avatars/StudentAvatarPlaceholder.png';
+const DEFAULT_AVATAR = '/uploads/avatars/student-avatar-placeholder.png';;
 
 export function getAvatarSrc(user) {
   const savedAvatar = localStorage.getItem('avatarUrl');
