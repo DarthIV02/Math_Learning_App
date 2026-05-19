@@ -13,18 +13,13 @@
 .sticker-tray {
   @apply flex flex-col items-center gap-3 rounded-[1.5rem] border-4 border-dashed border-sky-100 bg-sky-50/60 px-2 py-4;
   /* Fixed width so it never squishes the board */
-  width: 72px;
+  width: 100px;
   flex-shrink: 0;
   /* Scrollable if stickers overflow vertically */
   overflow-y: auto;
   overflow-x: hidden;
   /* Max height matches the board's min-height */
   max-height: 420px;
-}
-
-.sticker-tray__label {
-  @apply text-base leading-none;
-  flex-shrink: 0;
 }
 
 .sticker-tray__items {
@@ -44,7 +39,7 @@
   border: 3px solid #bae6fd;
   cursor: grab;
   user-select: none;
-  width: 52px;
+  min-width: 75px;
   transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
   box-shadow: 0 2px 0 #bae6fd, 0 4px 10px rgba(14, 165, 233, 0.12);
 }
@@ -68,7 +63,7 @@
 .tray-sticker__label {
   @apply text-[0.55rem] font-black text-sky-600 uppercase tracking-wide text-center;
   /* Show labels — they fit under the emoji in the narrow strip */
-  max-width: 44px;
+  max-width: 75px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

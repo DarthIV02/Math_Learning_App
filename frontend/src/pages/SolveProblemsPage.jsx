@@ -1,59 +1,132 @@
 import './styles/SolveProblems.css';
-import AnswerInput from '../components/InputAnswer/InputAnswer';
-import Whiteboard from '../features/Whiteboard';
-import ProblemNumSelector from '../features/ProblemNumSelector/ProblemNumSelector';
+
 import BackgroundLayer from '../components/Background/BackgroundLayer';
 import SurfaceCard from '../components/SurfaceCard/SurfaceCard';
-import { useState } from 'react';
+import AnswerInput from '../components/InputAnswer/InputAnswer';
 
-export default function SolveProblemPage({ onNavigate }) {
-  const [answers, setAnswers] = useState({
-    red: '',
-    yellow: '',
-    blue: '',
-  });
+import Whiteboard from '../features/Whiteboard';
+import ProblemNumSelector from '../features/ProblemNumSelector/ProblemNumSelector';
+import AnswerFeedback from '../features/AnswerFeedback/AnswerFeedback';
+
+import { useState, useMemo, useCallback } from 'react';
+
+export default function SolveProblemPage({ onNavigate, problems = [] }) {
   const [selectedProblem, setSelectedProblem] = useState(1);
-
-  const problemText =
-    'Lisa hat 600 Legosteine. Die Hälfte davon ist rot. Die andere Hälfte besteht zu gleichen Teilen aus gelben und blauen Steinen. Wie viele Legosteine sind es jeweils?';
-
-  const handleCheckAnswer = () => {
-    alert(`Deine Antwort: ${answer}`);
-  };
-
-  const STICKERS = [
-    { id: 'lego-red',  emoji: '🧱', label: 'Rot', color: '#c0392b', defaultValue: 1 },
-    { id: 'lego-blue', emoji: '🧱', label: 'Blau', color: '#6d8fd2', defaultValue: 1 },
-    { id: 'lego-yellow',emoji: '🧱', label: 'Gelb', color: '#d5d52d', defaultValue: 1 },
-    { id: 'person',emoji: '👧', label: 'Kind', defaultValue: 1 },
-
-  ];
-
+  const [answersByProblem, setAnswersByProblem] = useState({});
   const [tips, setTips] = useState([]);
   const [isLoadingTip, setIsLoadingTip] = useState(false);
+  const [feedback, setFeedback] = useState(null);
+  const [solvedProblems, setSolvedProblems] = useState({});
+
+  // One whiteboard snapshot per problem index: { placed: [], drawing: <dataURL> }
+  const [whiteboardSnapshots, setWhiteboardSnapshots] = useState({});
+
+  const problem = problems[selectedProblem - 1];
+  const problemIndex = selectedProblem - 1;
+  const answers = answersByProblem[problemIndex] ?? {};
+
+  const answerItems = useMemo(() => {
+    if (!problem?.correct_answers) return [];
+
+    return Object.entries(problem.correct_answers).map(([key, value]) => ({
+      key,
+      label: key,
+      type: typeof value === 'number' ? 'number' : 'boolean',
+    }));
+  }, [problem]);
+
+  const setAnswers = (updater) => {
+    setAnswersByProblem((prev) => {
+      const current = prev[problemIndex] ?? {};
+
+      const nextAnswers =
+        typeof updater === 'function'
+          ? updater(current)
+          : updater;
+
+      return {
+        ...prev,
+        [problemIndex]: nextAnswers,
+      };
+    });
+  };
+
+  const stickers = useMemo(() => {
+    if (!problem) return [];
+    return (problem.subject_object ?? []).map((name, i) => ({
+      id: `sticker-${i}`,
+      emoji: problem.emojis?.[i] ?? '📦',
+      label: name,
+      color: problem.colors?.[i] ?? undefined,
+      defaultValue: 1,
+    }));
+  }, [problem]);
+
+  // Called by Whiteboard whenever its state changes
+  const handleWhiteboardChange = useCallback(({ placed, drawing }) => {
+    setWhiteboardSnapshots((prev) => ({
+      ...prev,
+      [problemIndex]: { placed, drawing },
+    }));
+  }, [problemIndex]);
+
+  const handleSelectProblem = (num) => {
+    setSelectedProblem(num);
+    setTips([]);
+  };
 
   const handleRequestTips = async ({ placed, canvas }) => {
     setIsLoadingTip(true);
-
     try {
-      // Later: replace this with your real API call.
-      // Send: problemText, placed stickers, answers, and canvas image.
-      console.log({
-        problemText,
-        placed,
-        answers,
-        canvas,
-      });
-
-      setTips([
-        'Ich sehe deine Sticker. Überlege zuerst: Was ist die Hälfte von 600?',
-        'Rot ist die Hälfte. Danach bleiben 300 für Gelb und Blau.',
-        'Gelb und Blau sind gleich viele — teile 300 durch 2.',
-      ]);
+      setTips(problem.tips ?? []);
     } finally {
       setIsLoadingTip(false);
     }
   };
+
+  const handleCheckAnswers = () => {
+    const correct = problem.correct_answers;
+
+    const allCorrect = Object.entries(correct).every(([key, value]) => {
+      return String(answers[key] ?? '').trim() === String(value);
+    });
+
+    if (allCorrect) {
+      setSolvedProblems((prev) => ({
+        ...prev,
+        [problemIndex]: true,
+      }));
+
+      setFeedback({
+        type: 'correct',
+        message: 'Super! 🎉',
+      });
+    } else {
+      setFeedback({
+        type: 'wrong',
+        message: 'Fast! Versuch es nochmal 😊',
+      });
+}
+  };
+
+  if (!problems.length) {
+    return (
+      <main className="solve-page relative min-h-screen overflow-y-auto">
+        <BackgroundLayer />
+        <div className="relative z-10 flex min-h-screen items-center justify-center">
+          <div className="text-center">
+            <p className="mb-4 text-lg text-slate-600">Keine Aufgaben geladen.</p>
+            <button
+              className="rounded-xl bg-emerald-500 px-6 py-3 font-bold text-white"
+              onClick={() => onNavigate('select-topic')}
+            >
+              Thema wählen
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="solve-page relative min-h-screen overflow-y-auto">
@@ -62,39 +135,44 @@ export default function SolveProblemPage({ onNavigate }) {
       <div className="solve-page__content relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-4 px-4 py-4">
         <ProblemNumSelector
           selectedProblem={selectedProblem}
-          onSelectProblem={setSelectedProblem}
-          totalProblems={10}
-          onBack={() => onNavigate('home')}
+          onSelectProblem={handleSelectProblem}
+          totalProblems={problems.length}
+          onBack={() => onNavigate('select-topic')}
         />
 
         <div className="solve-layout grid w-full gap-4">
           <section className="solve-area-problem">
             <SurfaceCard className="rounded-[1.5rem] bg-emerald-50 p-4 md:p-5">
               <p className="text-lg font-bold leading-relaxed text-slate-700 md:text-xl">
-                {problemText}
+                {problem.question_text}
               </p>
             </SurfaceCard>
           </section>
 
           <section className="solve-area-whiteboard">
             <Whiteboard
-              stickers={STICKERS}
+              key={problemIndex}
+              stickers={stickers}
               tips={tips}
               isLoadingTip={isLoadingTip}
               onRequestTips={handleRequestTips}
+              initialSnapshot={whiteboardSnapshots[problemIndex]}
+              onSnapshotChange={handleWhiteboardChange}
             />
           </section>
 
           <section className="solve-area-answer">
+            <AnswerFeedback
+              feedback={feedback}
+              onClear={() => setFeedback(null)}
+            />
+
             <AnswerInput
-              items={[
-                { key: 'red', label: 'Rot' },
-                { key: 'yellow', label: 'Gelb' },
-                { key: 'blue', label: 'Blau' },
-              ]}
+              items={answerItems}
               answers={answers}
               setAnswers={setAnswers}
-              onCheck={() => console.log(answers)}
+              onCheck={handleCheckAnswers}
+              readOnly={!!solvedProblems[problemIndex]}
             />
           </section>
         </div>

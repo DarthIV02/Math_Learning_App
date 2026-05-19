@@ -47,12 +47,6 @@ export function useVisibleButtons({
       fit = Math.max(1, fit);
       fit = Math.min(itemCount, fit);
 
-      console.log({
-        width,
-        buttonWidth,
-        fit,
-      });
-
       setVisibleCount(fit);
     };
 

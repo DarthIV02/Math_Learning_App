@@ -42,6 +42,12 @@
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
+.answer-input__field--solved {
+  border-color: #7fd882;
+  background: #e2e4e5;
+  color: #334155;
+}
+
 .answer-input__field:focus {
   border-color: #3734d3;
   background: #ffffff;

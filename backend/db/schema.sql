@@ -96,12 +96,11 @@ CREATE TABLE problems (
   grade INT NOT NULL CHECK (grade IN (3, 4)),
   question_text TEXT NOT NULL,
 
-  subject_object TEXT NOT NULL, -- e.g. "apples", "students", "cats"
-
+  subject_object TEXT[] NOT NULL DEFAULT '{}', -- e.g. "Äpfel", "Bananen", "Katzen"
   emojis TEXT[] NOT NULL DEFAULT '{}',
   colors TEXT[] DEFAULT '{}',
 
-  correct_answers TEXT[] NOT NULL,
+  correct_answers JSONB NOT NULL, -- e.g. {"Äpfel": 5, "Bananen": 3}
 
   tips TEXT[] NOT NULL DEFAULT '{}',
 
@@ -146,7 +145,7 @@ CREATE TABLE sessions (
 -- ─────────────────────────────────────────────
 
 INSERT INTO operations (name)
-VALUES ('addition'), ('subtraktion'), ('multiplikation'), ('division'), ('multiple'),;
+VALUES ('addition'), ('subtraktion'), ('multiplikation'), ('division'), ('multiple');
 
 INSERT INTO themes (name)
 VALUES ('geld'), ('gewichte'), ('längen'), ('other');
@@ -154,7 +153,7 @@ VALUES ('geld'), ('gewichte'), ('längen'), ('other');
 INSERT INTO problems (
   operation_id,
   theme_id,
-  problem_number,
+  grade,
   question_text,
   subject_object,
   emojis,
@@ -165,38 +164,123 @@ INSERT INTO problems (
 )
 VALUES
 (
-  1,
-  2,
-  1,
-  'Anna hat 3 Äpfel. Ben gibt ihr 2 weitere Äpfel. Wie viele Äpfel hat Anna jetzt?',
-  'apples',
-  ARRAY['🍎'],
-  ARRAY['red'],
-  ARRAY['5'],
-  ARRAY['Zähle 3 + 2.', 'Starte bei 3 und zähle 2 weiter.'],
-  1
-),
-(
-  1,
-  3,
-  2,
-  'In einer Klasse sitzen 4 Kinder. Dann kommen 3 Kinder dazu. Wie viele Kinder sind es insgesamt?',
-  'students',
-  ARRAY['🧒'],
-  ARRAY[]::TEXT[],
-  ARRAY['7'],
-  ARRAY['Rechne 4 + 3.', 'Zähle von 4 drei Schritte weiter.'],
-  1
+  4,
+  4,
+  4,
+  'Lisa hat 600 Legosteine. Die Hälfte davon ist rot. Die andere Hälfte besteht zu gleichen Teilen aus gelben und blauen Steinen. Wie viele Legosteine sind es jeweils?',
+  ARRAY['Rot Lego', 'Gelb Lego', 'Blau Lego'],
+  ARRAY['🧱', '🧱', '🧱'],
+  ARRAY['red', 'yellow', 'blue'],
+  '{"Rot Lego": 300, "Gelb Lego": 150, "Blau Lego": 150}',
+  ARRAY['Beginne damit, die Blöcke von rechts herüberzuziehen. Kannst du herausfinden, wie viele davon rot sind?'],
+  2
 ),
 (
   2,
   1,
+  4,
+  'Tim hat 315 Euro Taschengeld gespart. Er möchte sich ein Fahrrad für 250 Euro, eine Hose für 42 Euro und ein Buch für 19 Euro kaufen. Reicht Tims Taschengeld aus?',
+  ARRAY['Fahrrad', 'Hose', 'Buch', 'Euro'],
+  ARRAY['🚲', '👖', '📚', '💰'],
+  ARRAY['', '', ''],
+  '{"Ausreichend?": "Ja"}',
+  ARRAY['Beginnen Sie damit, die Ausgaben aufzuschreiben. Wie viel kostet jedes Objekt?'],
+  2
+),
+(
   3,
-  'Es sind 9 Katzen im Garten. 4 Katzen laufen weg. Wie viele Katzen bleiben?',
-  'cats',
-  ARRAY['🐱'],
-  ARRAY[]::TEXT[],
-  ARRAY['5'],
-  ARRAY['Rechne 9 - 4.', 'Zähle 4 von 9 zurück.'],
+  4,
+  3,
+  'Du backst mit Oma 3 Pizzen. Du legst auf jede Pizza 3 Scheiben Salami. Oma legt auf jeden Pizza nochmal 4 Scheiben dazu. Wie viele Scheiben Salami sind das?',
+  ARRAY['Pizzen', 'Salami'],
+  ARRAY['🍕', '🔴'],
+  ARRAY['', ''],
+  '{"Scheiben Salami": 21}',
+  ARRAY['Beginnen Sie damit, die Pizzen und Salamis zu ziehen.'],
+  2
+),
+(
+  1,
+  1,
+  4,
+  'Heidi hat 146 Euro gespart. Sie will sich eine Hose für 134 Euro und ein Buch für 17 Euro kaufen. Reicht das gesparte Geld aus?',
+  ARRAY['Euro', 'Hose', 'Buch'],
+  ARRAY['🪙', '👖', '📘'],
+  ARRAY['', '', ''],
+  '{"Ausreichend?": "Nein"}',
+  ARRAY['Beginnen Sie damit anzugeben, wie viel Geld Sie für jedes Objekt benötigen.'],
   1
-);
+),
+(
+  2,
+  1,
+  3,
+  'Michas Papa hat 380 Euro im Geldbeutel. Er kauft ein Radio. Jetzt hat er noch 48 Euro. Wie viel hat das Radio gekostet?',
+  ARRAY['Euro', 'Radio'],
+  ARRAY['🪙', '📻'],
+  ARRAY['', ''],
+  '{"Radio": 332}',
+  ARRAY['Beginne damit aufzuschreiben, wie viel Geld er hatte und wie viel er nach dem Radio noch hatte.'],
+  3
+),
+(
+  4,
+  1,
+  4,
+  'Will hat doppelt so viel Geld in der Spardose wie Sam. Zusammen haben sie 210 Euro. Wie viel Geld hat Willi, wie viel hat Sam?',
+  ARRAY['Spardose', 'Euro', 'Kind'],
+  ARRAY['🐖', '🪙', '👦'],
+  ARRAY['', ''],
+  '{"Will": 140, "Sam": 70}',
+  ARRAY['Versuchen Sie, für jeden Schüler ein Sparschwein mit dem gleichen Geldbetrag herauszuholen'],
+  3
+),
+(
+  1,
+  4,
+  3,
+  'Ein Tierpark bestellt Futter für seine Tiere: 325 kg Heu für die Zebras, 468 kg Fisch für die Pinguine und 129 kg Fleisch für die Löwen. Wie viel Kilogramm Futter wurden insgesamt bestellt?',
+  ARRAY['Heu', 'Fisch', 'Fleisch'],
+  ARRAY['🥬', '🐟', '🥩'],
+  ARRAY['', ''],
+  '{"Gesmamtfutter": 922}',
+  ARRAY['Beginne damit, die verschiedenen Futtersorten herauszuziehen. Wie viel wiegt jede Sorte?'],
+  1
+),
+(
+  4,
+  4,
+  3,
+  'Der Bauer verpackt Äpfel in Kisten. Immer 10 Äpfel passen in eine Kiste. Wie viele Kisten braucht er für 80 Äpfel?',
+  ARRAY['Kiste', 'Äpfel'],
+  ARRAY['📦', '🍎'],
+  ARRAY['', ''],
+  '{"Kisten": 8}',
+  ARRAY['Beginne damit, die Äpfel in die Kisten zu ziehen.'],
+  1
+),
+(
+  3,
+  4,
+  3,
+  'Nora braucht für ein Kastanienmännchen 6 Kastanien. Wie viele Kastanien braucht sie für 5 Männchen?',
+  ARRAY['Kastanien', 'Männchen'],
+  ARRAY['🌰', '🕴️'],
+  ARRAY['', ''],
+  '{"Kastanien": 30}',
+  ARRAY['Beginnen Sie damit, die Kastanien pro Person zu zeichnen.'],
+  2
+),
+(
+  4,
+  4,
+  3,
+  'Mama kauft 48 Erdbeeren und teilt sie auf 6 Schüsseln auf. Wie viele Erdbeeren sind in einer Schüssel?',
+  ARRAY['Erdbeeren', 'Schüsseln'],
+  ARRAY['🍓', '🥣'],
+  ARRAY['', ''],
+  '{"Erdbeeren": 8}',
+  ARRAY['Beginnen Sie damit, die Erdbeeren pro Schüssel zu zeichnen.'],
+  1
+)
+;

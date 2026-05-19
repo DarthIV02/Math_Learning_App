@@ -17,6 +17,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [pageState, setPageState] = useState({});
 
   const restoreSession = async (savedToken) => {
     try {
@@ -43,7 +44,7 @@ function App() {
       setUser(normalizedUser);
       setToken(savedToken);
       setIsLoggedIn(true);
-      setCurrentPage('home');
+      handleNavigate('home');
     } catch (err) {
       localStorage.removeItem('token');
     }
@@ -69,11 +70,11 @@ function App() {
     setUser(normalizedUser);
     setToken(result.token);
     setIsLoggedIn(true);
-    setCurrentPage('home');
+    handleNavigate('home');
   };
 
   const handleRegisterClassSuccess = (result) => {
-    setCurrentPage('login');
+    handleNavigate('login');
   };
 
   const handleUserUpdate = async (updatedUser) => {
@@ -120,7 +121,12 @@ function App() {
     setUser(null);
     setToken(null);
     setIsLoggedIn(false);
-    setCurrentPage('login');
+    handleNavigate('login');
+  };
+
+  const handleNavigate = (page, state = {}) => {
+    setCurrentPage(page);
+    setPageState(state);
   };
 
   if (!isLoggedIn) {
@@ -128,7 +134,7 @@ function App() {
         return (
           <RegisterStudentPage
               onRegisterSuccess={handleAuthSuccess}
-              onBackToLogin={() => setCurrentPage('login')}
+              onBackToLogin={() => handleNavigate('login')}
             />
         );
       }
@@ -137,7 +143,7 @@ function App() {
         return (
           <RegisterClassPage
               onRegisterSuccess={handleRegisterClassSuccess}
-              onBackToLogin={() => setCurrentPage('login')}
+              onBackToLogin={() => handleNavigate('login')}
             />
         );
       }
@@ -145,8 +151,8 @@ function App() {
     return (
       <LoginPage
         onLoginSuccess={handleAuthSuccess}
-        onRegister={() => setCurrentPage('register')}
-        onRegisterClass={() => setCurrentPage('register_class')}
+        onRegister={() => handleNavigate('register')}
+        onRegisterClass={() => handleNavigate('register_class')}
       />
     );
   }
@@ -159,17 +165,20 @@ function App() {
             user={user}
             token={token}
             onUserUpdate={handleUserUpdate}
-            onNavigate={setCurrentPage}
+            onNavigate={handleNavigate}
             onLogout={handleLogout}
           />
         );
       case 'solve-problems':
-        return <SolveProblemsPage onNavigate={setCurrentPage} />;
+        return <SolveProblemsPage 
+          onNavigate={handleNavigate} 
+          problems={pageState.problems ?? []}
+        />;
       case 'select-topic':
-        return <SelectTopic onNavigate={setCurrentPage} />;
+        return <SelectTopic onNavigate={handleNavigate} user={user}/>;
       case 'home':
       default:
-        return <HomePage onNavigate={setCurrentPage} user={user} />;
+        return <HomePage onNavigate={handleNavigate} user={user} />;
     }
   };
 

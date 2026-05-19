@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 export default function useWhiteboard() {
   const canvasRef = useRef(null);
   const isDrawingRef = useRef(false);
+  const didStrokeRef = useRef(false);
   const [ctx, setCtx] = useState(null);
-  const [hasDrawn, setHasDrawn] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -44,7 +44,7 @@ export default function useWhiteboard() {
 
     const rect = canvas.getBoundingClientRect();
 
-    if (event.touches && event.touches.length > 0) {
+    if (event.touches?.length > 0) {
       return {
         x: event.touches[0].clientX - rect.left,
         y: event.touches[0].clientY - rect.top,
@@ -61,6 +61,8 @@ export default function useWhiteboard() {
     if (!ctx) return;
 
     isDrawingRef.current = true;
+    didStrokeRef.current = false;
+
     const { x, y } = getPointerPosition(event);
 
     ctx.beginPath();
@@ -70,9 +72,7 @@ export default function useWhiteboard() {
   const draw = (event) => {
     if (!isDrawingRef.current || !ctx) return;
 
-    if (!hasDrawn) {
-      setHasDrawn(true);
-    }
+    didStrokeRef.current = true;
 
     const { x, y } = getPointerPosition(event);
     ctx.lineTo(x, y);
@@ -80,10 +80,16 @@ export default function useWhiteboard() {
   };
 
   const stopDrawing = () => {
-    if (!ctx) return;
+    if (!ctx) return false;
+
+    if (!isDrawingRef.current) {
+      return false;
+    }
 
     isDrawingRef.current = false;
     ctx.closePath();
+
+    return didStrokeRef.current;
   };
 
   const clearBoard = () => {
@@ -93,12 +99,13 @@ export default function useWhiteboard() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    setHasDrawn(false);
+
+    isDrawingRef.current = false;
+    didStrokeRef.current = false;
   };
 
   return {
     canvasRef,
-    hasDrawn,
     startDrawing,
     draw,
     stopDrawing,

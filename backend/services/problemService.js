@@ -1,22 +1,26 @@
 const db = require('../db');
 
-async function listProblems({ operation_id, theme_id, difficulty }) {
+async function listProblems({ operation_id, theme_id, difficulty, grade,limit = 10 }) {
   const conditions = [];
   const values = [];
 
   if (operation_id) { values.push(operation_id); conditions.push(`p.operation_id = $${values.length}`); }
   if (theme_id)     { values.push(theme_id);     conditions.push(`p.theme_id = $${values.length}`); }
   if (difficulty)   { values.push(difficulty);   conditions.push(`p.difficulty = $${values.length}`); }
+  if (grade)        { values.push(grade);        conditions.push(`p.grade = $${values.length}`); }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
+  // Cap at `limit`, but if fewer exist in the DB, return all of them
+  values.push(limit);
   const result = await db.query(
     `SELECT p.*, o.name AS operation_name, t.name AS theme_name
      FROM problems p
      LEFT JOIN operations o ON o.id = p.operation_id
      LEFT JOIN themes t ON t.id = p.theme_id
      ${where}
-     ORDER BY p.problem_number ASC`,
+     ORDER BY RANDOM()
+     LIMIT $${values.length}`,
     values
   );
   return result.rows;
