@@ -22,7 +22,7 @@ function App() {
   const restoreSession = async (savedToken) => {
     try {
       const response = await fetch(
-        `${window.location.protocol}//${window.location.hostname}:3001/api/users/me`,
+       `${import.meta.env.VITE_API_URL}/users/me`,
         {
           headers: {
             Authorization: `Bearer ${savedToken}`,
@@ -105,6 +105,17 @@ function App() {
     setPageState(state);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('avatarUrl');
+
+    setUser(null);
+    setToken(null);
+    setIsLoggedIn(false);
+    setCurrentPage('login');
+    setPageState({});
+  };
+
   if (!isLoggedIn) {
     if (currentPage === 'register') {
         return (
@@ -142,6 +153,7 @@ function App() {
             token={token}
             onUserUpdate={handleUserUpdate}
             onNavigate={handleNavigate}
+            onLogout={handleLogout}
           />
         );
       case 'solve-problems':
