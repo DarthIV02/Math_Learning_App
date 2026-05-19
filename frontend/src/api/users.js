@@ -1,7 +1,20 @@
 const API_PROTOCOL = window.location.protocol;
-const API_HOST = window.location.hostname; 
+const API_HOST = window.location.hostname;
+
 const BASE_URL =
   import.meta.env.VITE_API_URL || `${API_PROTOCOL}//${API_HOST}:3001/api`;
+
+const API_ORIGIN = BASE_URL.replace('/api', '');
+
+export function getFullAvatarUrl(avatarUrl) {
+  if (!avatarUrl) return null;
+
+  if (avatarUrl.startsWith('http')) {
+    return avatarUrl;
+  }
+
+  return `${API_ORIGIN}${avatarUrl}`;
+}
 
 export async function updateUser(userId, data, token) {
   const response = await fetch(`${BASE_URL}/users/${userId}`, {

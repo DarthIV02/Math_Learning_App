@@ -7,7 +7,7 @@ import ProfileCard from '../features/Profile/ProfileCard';
 import ProfileEditForm from '../features/Profile/ProfileEditForm';
 import ProfileStats from '../features/Profile/ProfileStats';
 
-import { uploadAvatar } from '../api/users';
+import { uploadAvatar, getFullAvatarUrl } from '../api/users';
 import { logoutUser } from '../api/auth';
 import { saveAvatarUrl } from '../lib/avatar';
 
@@ -131,9 +131,7 @@ export default function ProfilePage({ onNavigate, user, token, onUserUpdate, onL
     }
   };
 
-  const fullAvatarUrl = user?.avatarUrl
-    ? `${API_ORIGIN}${user.avatarUrl}`
-    : null;
+  const fullAvatarUrl = getFullAvatarUrl(user?.avatarUrl);
 
   return (
     <div className="profile-page">
