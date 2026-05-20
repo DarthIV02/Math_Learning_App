@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js",
+    "dev": "npx dotenvx run --env-file=.env.local -- nodemon index.js",
     "test": "npx dotenvx run --env-file=.env.test -- jest",
     "test:watch": "npx dotenvx run --env-file=.env.test -- jest --watch"
   },

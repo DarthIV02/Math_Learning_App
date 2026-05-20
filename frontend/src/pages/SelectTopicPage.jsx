@@ -9,8 +9,6 @@ import StatBubble from '../features/StatBubble/StatBubble';
 import TopicSelector from '../features/TopicSelector/TopicSelector';
 import hedgehog from '../assets/images/hedgehog_v2.png';
 
-import { fetchProblems } from '../api/problem';
-
 function ErrorToast({ message, onDismiss }) {
   if (!message) return null;
   return (
@@ -21,25 +19,22 @@ function ErrorToast({ message, onDismiss }) {
   );
 }
 
-export default function SelectTopicPage({ onNavigate, user }) {
+export default function SelectTopicPage({ onNavigate, user, onTopicSelect }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const handleTopicSelect = useCallback(async (filter) => {
     setError(null);
     setLoading(true);
+
     try {
-      const problems = await fetchProblems({
-        ...filter,
-        grade: user?.grade,
-      });
-      onNavigate('solve-problems', { problems });
+      await onTopicSelect(filter);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [onNavigate]);
+  }, [onTopicSelect]);
 
   return (
     <DifficultyProvider>

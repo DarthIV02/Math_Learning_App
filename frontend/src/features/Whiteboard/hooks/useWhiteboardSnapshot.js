@@ -15,28 +15,41 @@ export default function useWhiteboardSnapshot({
       initialSnapshot?.drawing,
       setHasDrawing
     );
-  }, []);
+  }, [canvasRef, initialSnapshot?.drawing]);
 
-  const saveSnapshot = useCallback(
-    (nextPlaced = placed, hasRealDrawing = null) => {
+  const buildSnapshot = useCallback(
+    (nextPlaced, hasRealDrawing = null) => {
       const canvas = canvasRef.current;
 
       const hasSomething =
-        hasRealDrawing ?? !isCanvasBlank(canvas);
+        hasRealDrawing ?? (canvas && !isCanvasBlank(canvas));
 
       const drawing =
         hasSomething && canvas
           ? canvas.toDataURL('image/png')
           : null;
 
-      setHasDrawing(hasSomething);
-
-      onSnapshotChange?.({
+      return {
         placed: nextPlaced,
         drawing,
+        hasSomething: Boolean(hasSomething),
+      };
+    },
+    [canvasRef]
+  );
+
+  const notifySnapshotChange = useCallback(
+    (nextPlaced, hasRealDrawing = null) => {
+      const snapshot = buildSnapshot(nextPlaced, hasRealDrawing);
+
+      setHasDrawing(snapshot.hasSomething);
+
+      onSnapshotChange?.({
+        placed: snapshot.placed,
+        drawing: snapshot.drawing,
       });
     },
-    [canvasRef, onSnapshotChange, placed]
+    [buildSnapshot, onSnapshotChange]
   );
 
   const updatePlaced = useCallback(
@@ -47,11 +60,22 @@ export default function useWhiteboardSnapshot({
             ? updater(prev)
             : updater;
 
-        saveSnapshot(next);
+        // defer parent update until after this state update finishes
+        queueMicrotask(() => {
+          notifySnapshotChange(next);
+        });
+
         return next;
       });
     },
-    [saveSnapshot]
+    [notifySnapshotChange]
+  );
+
+  const saveSnapshot = useCallback(
+    (nextPlaced = placed, hasRealDrawing = null) => {
+      notifySnapshotChange(nextPlaced, hasRealDrawing);
+    },
+    [notifySnapshotChange, placed]
   );
 
   const clearSnapshot = useCallback(

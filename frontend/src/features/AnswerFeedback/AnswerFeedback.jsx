@@ -7,7 +7,7 @@ export default function AnswerFeedback({ feedback, onClear }) {
 
     const timeout = setTimeout(() => {
       onClear?.();
-    }, 2500);
+    }, 1000);
 
     return () => clearTimeout(timeout);
   }, [feedback, onClear]);

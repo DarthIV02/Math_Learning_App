@@ -6,16 +6,19 @@ const path = require('path');
 
 const app = express();
 
+const allowedOrigins = [
+  'https://math-learning-app-two.vercel.app',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 app.use(cors({
-  origin: [
-    'https://172.24.220.6:3000',
-    'https://131.159.198.187:3000',
-    'https://131.159.197.60:3000',
-    'https://192.168.1.103:3000',
-    'https://localhost:3000',
-    'https://127.0.0.1:3000',
-    'https://math-learning-app-two.vercel.app'
-  ],
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS blocked: ${origin}`));
+    }
+  },
   credentials: true,
 }));
 
@@ -31,6 +34,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/problems', require('./routes/problems'));
 app.use('/api/attempts', require('./routes/attempts'));
+app.use('/api/progress', require('./routes/progress'));
 app.use('/api', require('./routes/lookups'));
 
 const PORT = process.env.PORT || 3001;

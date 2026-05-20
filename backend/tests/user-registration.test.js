@@ -151,7 +151,7 @@ describe('Classes', () => {
   test('fails without class name', async () => {
     await expect(
       insertClass(makeClass({ name: null }))
-    ).rejects.toThrow(/not.null/i);
+    ).rejects.toThrow(/not null|null value/i)
   });
 
   test('fails with invalid grade', async () => {

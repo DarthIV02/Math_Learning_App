@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import './App.css';
 import { normalizeUser } from './utils/normalizeUser';
 import { saveAvatarUrl } from './lib/avatar';
+
 import { updateUser } from './api/users';
+import { fetchProblems } from './api/problem';
 
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -18,6 +20,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [pageState, setPageState] = useState({});
+  const [problemFilter, setProblemFilter] = useState(null);
 
   const restoreSession = async (savedToken) => {
     try {
@@ -116,6 +119,18 @@ function App() {
     setPageState({});
   };
 
+  const loadProblemsForFilter = async (filter) => {
+    const finalFilter = {
+      ...filter,
+      grade: user?.grade,
+    };
+
+    const problems = await fetchProblems(finalFilter);
+
+    setProblemFilter(finalFilter);
+    handleNavigate('solve-problems', { problems });
+  };
+
   if (!isLoggedIn) {
     if (currentPage === 'register') {
         return (
@@ -157,12 +172,32 @@ function App() {
           />
         );
       case 'solve-problems':
-        return <SolveProblemsPage 
-          onNavigate={handleNavigate} 
-          problems={pageState.problems ?? []}
-        />;
+        return (
+          <SolveProblemsPage
+            onNavigate={handleNavigate}
+            problems={pageState.problems ?? []}
+            token={token}
+            onPlayAgain={async () => {
+              if (!problemFilter) return;
+
+              const problems = await fetchProblems(problemFilter);
+
+              setPageState((prev) => ({
+                ...prev,
+                problems,
+              }));
+            }}
+          />
+        );
+
       case 'select-topic':
-        return <SelectTopic onNavigate={handleNavigate} user={user}/>;
+        return (
+          <SelectTopic
+            onNavigate={handleNavigate}
+            user={user}
+            onTopicSelect={loadProblemsForFilter}
+          />
+        );
       case 'home':
       default:
         return <HomePage onNavigate={handleNavigate} user={user} />;

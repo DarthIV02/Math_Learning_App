@@ -110,8 +110,7 @@ export default function SwitchButton({
       • only a subset of buttons is shown
       • navigation arrows are displayed
   */
-  const useOverflow =
-    isSmall &&
+  const shouldMeasure =
     shorten_option === 'Next';
 
   /*
@@ -126,11 +125,15 @@ export default function SwitchButton({
   */
   const { containerRef, visibleCount } =
     useVisibleButtons({
-      enabled: useOverflow,
+      enabled: shouldMeasure,
       itemCount: activeOptions.length,
-      reservedWidth: reservedWidth,
-      gap: gap,
+      reservedWidth,
+      gap,
     });
+
+  const useOverflow =
+    shouldMeasure &&
+    visibleCount < activeOptions.length;
 
   /*
     Pagination logic.
