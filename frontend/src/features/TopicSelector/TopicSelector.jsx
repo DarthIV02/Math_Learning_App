@@ -107,6 +107,22 @@ export default function TopicSelector({ onSelect, disabled }) {
           </div>
         </div>
 
+        {/* Random button */}
+        <div className="topic-selector__random-divider">
+          <span className="topic-selector__random-divider-line" />
+          <span className="topic-selector__random-divider-label">oder einfach loslegen</span>
+          <span className="topic-selector__random-divider-line" />
+        </div>
+
+        <div className="topic-selector__random">
+          <TaskButton
+            key={"random"}
+            variant="random"
+            disabled={disabled}
+            onClick={() => handleSelect({})}
+          />
+        </div>
+
       </div>
     </SurfaceCard>
   );

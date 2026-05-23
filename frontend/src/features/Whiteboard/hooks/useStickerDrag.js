@@ -6,22 +6,59 @@ export default function useStickerDrag({ boardRef, updatePlaced }) {
   const touchGhost = useRef(null);
   const draggingPlaced = useRef(null);
 
+  const MIN_DISTANCE_X = 45;
+  const MIN_DISTANCE_Y = 75;
+
+  const isTooClose = (a, b) => {
+    const dx = Math.abs(a.x - b.x);
+    const dy = Math.abs(a.y - b.y);
+
+    return dx < MIN_DISTANCE_X && dy < MIN_DISTANCE_Y;
+  };
+
+  const findFreePosition = (desired, existing) => {
+    const candidates = [
+      desired,
+      { x: desired.x + MIN_DISTANCE_X, y: desired.y },
+      { x: desired.x - MIN_DISTANCE_X, y: desired.y },
+      { x: desired.x, y: desired.y + MIN_DISTANCE_Y },
+      { x: desired.x, y: desired.y - MIN_DISTANCE_Y },
+      { x: desired.x + MIN_DISTANCE_X, y: desired.y + MIN_DISTANCE_Y },
+      { x: desired.x - MIN_DISTANCE_X, y: desired.y + MIN_DISTANCE_Y },
+      { x: desired.x + MIN_DISTANCE_X, y: desired.y - MIN_DISTANCE_Y },
+      { x: desired.x - MIN_DISTANCE_X, y: desired.y - MIN_DISTANCE_Y },
+    ];
+
+    return candidates.find((candidate) =>
+      existing.every((item) => !isTooClose(candidate, item))
+    ) ?? desired;
+  };
+
   const addStickerAt = useCallback(
     (sticker, clientX, clientY) => {
       if (!sticker || !boardRef.current) return;
 
       const rect = boardRef.current.getBoundingClientRect();
 
-      updatePlaced((prev) => [
-        ...prev,
-        {
-          ...sticker,
-          uid: `${Date.now()}-${Math.random()}`,
-          value: sticker.defaultValue ?? 1,
+      updatePlaced((prev) => {
+        const desired = {
           x: Math.max(0, clientX - rect.left - 28),
           y: Math.max(0, clientY - rect.top - 28),
-        },
-      ]);
+        };
+
+        const free = findFreePosition(desired, prev);
+
+        return [
+          ...prev,
+          {
+            ...sticker,
+            uid: `${Date.now()}-${Math.random()}`,
+            value: sticker.defaultValue ?? 1,
+            x: free.x,
+            y: free.y,
+          },
+        ];
+      });
     },
     [boardRef, updatePlaced]
   );
@@ -137,15 +174,23 @@ export default function useStickerDrag({ boardRef, updatePlaced }) {
       const rect = boardRef.current.getBoundingClientRect();
 
       updatePlaced((prev) =>
-        prev.map((p) =>
-          p.uid === dragging.uid
-            ? {
-                ...p,
-                x: Math.max(0, e.clientX - rect.left - dragging.offsetX),
-                y: Math.max(0, e.clientY - rect.top - dragging.offsetY),
-              }
-            : p
-        )
+        prev.map((p) => {
+          if (p.uid !== dragging.uid) return p;
+
+          const desired = {
+            x: Math.max(0, e.clientX - rect.left - dragging.offsetX),
+            y: Math.max(0, e.clientY - rect.top - dragging.offsetY),
+          };
+
+          const others = prev.filter((item) => item.uid !== dragging.uid);
+          const free = findFreePosition(desired, others);
+
+          return {
+            ...p,
+            x: free.x,
+            y: free.y,
+          };
+        })
       );
     },
     [boardRef, updatePlaced]

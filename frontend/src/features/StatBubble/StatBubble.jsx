@@ -3,7 +3,7 @@ import SurfaceCard from '../../components/SurfaceCard/SurfaceCard.jsx';
 import { getAvatarSrc } from '../../lib/avatar';
 import { useEffect, useState } from 'react';
 
-export default function StatBubble({ coins = 0, user }) {
+export default function StatBubble({ user }) {
   const [avatar, setAvatar] = useState(getAvatarSrc());
 
   useEffect(() => {
@@ -14,7 +14,7 @@ export default function StatBubble({ coins = 0, user }) {
     <SurfaceCard className='stat-bubble' soft={true}>
       <div className="stat-bubble__pill">
         <span className="stat-bubble__icon">🪙</span>
-        <span className="stat-bubble__value">{coins}</span>
+        <span className="stat-bubble__value">{user.coins}</span>
       </div>
 
       <div className="stat-bubble__divider" />

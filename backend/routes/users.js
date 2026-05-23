@@ -86,11 +86,10 @@ router.post(
 
 router.get('/me', authMiddleware, async (req, res) => {
   try {
-    const user = await userService.getUserById(req.user.id);
-
+    const user = await userService.getCurrentUserProfile(req.user.id);
     res.json(user);
   } catch (err) {
-    res.status(500).json({
+    res.status(err.status || 500).json({
       error: err.message,
     });
   }
@@ -104,6 +103,22 @@ router.get('/', authMiddleware, async (req, res) => {
   try {
     const users = await userService.listUsers();
     res.json(users);
+  } catch (err) {
+    res.status(err.status || 500).json({
+      error: err.message,
+    });
+  }
+});
+
+// ─────────────────────────────────────────────
+// Current user's profile stats
+// GET /api/users/me/stats
+// ─────────────────────────────────────────────
+
+router.get('/me/stats', authMiddleware, async (req, res) => {
+  try {
+    const stats = await userService.getUserProfileStats(req.user.id);
+    res.json(stats);
   } catch (err) {
     res.status(err.status || 500).json({
       error: err.message,
@@ -133,6 +148,35 @@ router.get('/:id', authMiddleware, async (req, res) => {
 router.put('/:id', authMiddleware, async (req, res) => {
   try {
     const user = await userService.updateUser(req.params.id, req.body);
+    res.json({ user });
+  } catch (err) {
+    res.status(err.status || 500).json({
+      error: err.message,
+    });
+  }
+});
+
+// ─────────────────────────────────────────────
+// Award coins to current user
+// POST /api/users/me/coins/award
+// ─────────────────────────────────────────────
+
+router.post('/me/coins/award', authMiddleware, async (req, res) => {
+  const { problemId, amount } = req.body;
+
+  if (!problemId || !amount) {
+    return res.status(400).json({
+      error: 'problemId and amount are required',
+    });
+  }
+
+  try {
+    const user = await userService.awardProblemCoins(
+      req.user.id,
+      problemId,
+      amount
+    );
+
     res.json({ user });
   } catch (err) {
     res.status(err.status || 500).json({

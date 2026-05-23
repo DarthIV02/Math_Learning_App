@@ -4,7 +4,15 @@ const { authMiddleware } = require('../middleware/auth');
 
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const problems = await problemService.listProblems(req.query);
+    const problems = await problemService.listProblems({
+      operation_id: req.query.operation_id,
+      theme_id: req.query.theme_id,
+      difficulty: req.query.difficulty,
+      grade: req.query.grade,
+      limit: req.query.limit ?? 7,
+      user_id: req.user.id,
+      unsolvedOnly: req.query.unsolvedOnly === 'true',
+    });
     res.json(problems);
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });

@@ -6,21 +6,31 @@ import EmptyProblemsScreen from '../features/SolveProblems/EmptyProblemScreen';
 
 import { useSolveProblemsSession } from '../hooks/useSolveProblemsSession';
 
+import {COINS_BY_DIFFICULTY} from '../lib/constants';
+
 export default function SolveProblemPage({
   onNavigate,
   token,
   problems = [],
+  difficulty,
   onPlayAgain,
+  user,
+  onCoinsEarned,
 }) {
-  const session = useSolveProblemsSession({ problems, token });
 
-  const handleBack = () => {
+  const coinsPerProblem = COINS_BY_DIFFICULTY[difficulty] ?? 10;
+  const session = useSolveProblemsSession({ problems, token, userId: user?.id, coinsPerProblem, onCoinsEarned });
+
+  const handleBack = async () => {
+    await session.flushQueue();
+    session.resetSession();
     onNavigate('select-topic');
   };
 
-  const handlePlayAgain = () => {
+  const handlePlayAgain = async () => {
+    await session.flushQueue();
     session.resetSession();
-    onPlayAgain?.();
+    await onPlayAgain?.();
   };
 
   if (!problems.length) {

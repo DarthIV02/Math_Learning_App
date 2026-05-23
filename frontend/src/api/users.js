@@ -35,6 +35,22 @@ export async function updateUser(userId, data, token) {
   return result.user || result;
 }
 
+export async function fetchCurrentUser(token) {
+  const response = await fetch(`${BASE_URL}/users/me`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || 'User konnte nicht geladen werden.');
+  }
+
+  return result;
+}
+
 export async function uploadAvatar(file, token) {
   const formData = new FormData();
   formData.append('avatar', file);
@@ -54,4 +70,26 @@ export async function uploadAvatar(file, token) {
   }
 
   return data;
+}
+
+export async function awardProblemCoins(problemId, amount, token) {
+  const response = await fetch(`${BASE_URL}/users/me/coins/award`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      problemId,
+      amount,
+    }),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || 'Coins konnten nicht aktualisiert werden.');
+  }
+
+  return result.user || result;
 }

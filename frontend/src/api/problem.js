@@ -16,6 +16,9 @@ export async function fetchProblems({
   if (theme_id) params.set('theme_id', theme_id);
   if (difficulty) params.set('difficulty', difficulty);
   if (grade) params.set('grade', grade);
+  params.set('unsolvedOnly', true);
+
+  console.log('Fetching problems with params:', Object.fromEntries(params.entries()));
 
   const token = localStorage.getItem('token');
 

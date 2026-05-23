@@ -57,5 +57,8 @@ export function useAttemptQueue(token) {
     ]);
   }, []);
 
-  return { enqueue };
+  return {
+    enqueue,
+    flushQueue: flush,
+  };
 }

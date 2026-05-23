@@ -3,7 +3,7 @@ import './App.css';
 import { normalizeUser } from './utils/normalizeUser';
 import { saveAvatarUrl } from './lib/avatar';
 
-import { updateUser } from './api/users';
+import { updateUser, fetchCurrentUser } from './api/users';
 import { fetchProblems } from './api/problem';
 
 import HomePage from './pages/HomePage';
@@ -109,14 +109,40 @@ function App() {
   };
 
   const handleLogout = () => {
+    // Remove auth data
     localStorage.removeItem('token');
     localStorage.removeItem('avatarUrl');
 
+    // Remove queued attempts
+    localStorage.removeItem('attempt_queue');
+
+    // Remove saved problem sessions
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('session:')) {
+        localStorage.removeItem(key);
+      }
+    });
+
     setUser(null);
     setToken(null);
+    setProblemFilter(null);
     setIsLoggedIn(false);
     setCurrentPage('login');
     setPageState({});
+  };
+
+  const handleRefreshCurrentUser = async () => {
+    if (!token) return null;
+
+    const userData = await fetchCurrentUser(token);
+    const normalizedUser = normalizeUser(userData);
+
+    if (normalizedUser.avatarUrl) {
+      saveAvatarUrl(normalizedUser.avatarUrl);
+    }
+
+    setUser(normalizedUser);
+    return normalizedUser;
   };
 
   const loadProblemsForFilter = async (filter) => {
@@ -129,6 +155,41 @@ function App() {
 
     setProblemFilter(finalFilter);
     handleNavigate('solve-problems', { problems });
+  };
+
+  const handlePlayAgain = async () => {
+    if (!problemFilter) return;
+
+    setPageState((prev) => ({
+      ...prev,
+      problems: [],
+    }));
+
+    try {
+      const problems = await fetchProblems(problemFilter);
+
+      setPageState((prev) => ({
+        ...prev,
+        problems,
+      }));
+    } catch (err) {
+      setPageState((prev) => ({
+        ...prev,
+        problems: [],
+        error: err.message,
+      }));
+    }
+  };
+
+  const handleCoinsEarned = (amount) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        coins: (prev.coins ?? 0) + amount,
+      };
+    });
   };
 
   if (!isLoggedIn) {
@@ -166,6 +227,7 @@ function App() {
           <ProfilePage
             user={user}
             token={token}
+            onRefreshUser={handleRefreshCurrentUser}
             onUserUpdate={handleUserUpdate}
             onNavigate={handleNavigate}
             onLogout={handleLogout}
@@ -176,17 +238,11 @@ function App() {
           <SolveProblemsPage
             onNavigate={handleNavigate}
             problems={pageState.problems ?? []}
+            difficulty={problemFilter?.difficulty}
+            user={user}
             token={token}
-            onPlayAgain={async () => {
-              if (!problemFilter) return;
-
-              const problems = await fetchProblems(problemFilter);
-
-              setPageState((prev) => ({
-                ...prev,
-                problems,
-              }));
-            }}
+            onPlayAgain={handlePlayAgain}
+            onCoinsEarned={handleCoinsEarned}
           />
         );
 

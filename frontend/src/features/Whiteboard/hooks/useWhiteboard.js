@@ -5,6 +5,8 @@ export default function useWhiteboard() {
   const isDrawingRef = useRef(false);
   const didStrokeRef = useRef(false);
   const [ctx, setCtx] = useState(null);
+  const strokesRef = useRef([]);
+  const currentStrokeRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -24,13 +26,12 @@ export default function useWhiteboard() {
       canvas.width = rect.width;
       canvas.height = rect.height;
 
-      context.fillStyle = '#ffffff';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-
       context.lineCap = 'round';
       context.lineJoin = 'round';
       context.lineWidth = 5;
       context.strokeStyle = '#2563eb';
+
+      redrawStrokes(context, canvas);
     };
 
     resizeCanvas();
@@ -62,10 +63,24 @@ export default function useWhiteboard() {
   const startDrawing = (event) => {
     if (!ctx) return;
 
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
     isDrawingRef.current = true;
     didStrokeRef.current = false;
 
     const { x, y } = getPointerPosition(event);
+
+    currentStrokeRef.current = {
+      color: '#2563eb',
+      width: 5,
+      points: [
+        {
+          x: x,
+          y: y,
+        },
+      ],
+    };
 
     ctx.beginPath();
     ctx.moveTo(x, y);
@@ -74,9 +89,18 @@ export default function useWhiteboard() {
   const draw = (event) => {
     if (!isDrawingRef.current || !ctx) return;
 
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
     didStrokeRef.current = true;
 
     const { x, y } = getPointerPosition(event);
+
+    currentStrokeRef.current?.points.push({
+      x: x,
+      y: y,
+    });
+
     ctx.lineTo(x, y);
     ctx.stroke();
   };
@@ -91,7 +115,46 @@ export default function useWhiteboard() {
     isDrawingRef.current = false;
     ctx.closePath();
 
+    if (didStrokeRef.current && currentStrokeRef.current) {
+      strokesRef.current.push(currentStrokeRef.current);
+    }
+
+    currentStrokeRef.current = null;
+
     return didStrokeRef.current;
+  };
+
+  const getStrokes = () => strokesRef.current;
+
+  const redrawStrokes = (context, canvas) => {
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    strokesRef.current.forEach((stroke) => {
+      const points = stroke.points;
+      if (!points.length) return;
+
+      context.beginPath();
+      context.lineCap = 'round';
+      context.lineJoin = 'round';
+      context.lineWidth = stroke.width;
+      context.strokeStyle = stroke.color;
+
+      context.moveTo(
+        points[0].x,
+        points[0].y
+      );
+
+      points.slice(1).forEach((point) => {
+        context.lineTo(
+          point.x,
+          point.y
+        );
+      });
+
+      context.stroke();
+      context.closePath();
+    });
   };
 
   const clearBoard = () => {
@@ -104,6 +167,8 @@ export default function useWhiteboard() {
 
     isDrawingRef.current = false;
     didStrokeRef.current = false;
+
+    strokesRef.current = [];
   };
 
   return {
@@ -112,5 +177,6 @@ export default function useWhiteboard() {
     draw,
     stopDrawing,
     clearBoard,
+    getStrokes,
   };
 }

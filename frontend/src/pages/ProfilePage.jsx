@@ -9,19 +9,17 @@ import ProfileStats from '../features/Profile/ProfileStats';
 
 import { uploadAvatar, getFullAvatarUrl } from '../api/users';
 import { logoutUser } from '../api/auth';
+
 import { saveAvatarUrl } from '../lib/avatar';
 
 import './styles/ProfilePage.css';
 
-export default function ProfilePage({ onNavigate, user, token, onUserUpdate, onLogout }) {
+export default function ProfilePage({ onNavigate, user, token, onRefreshUser, onUserUpdate, onLogout }) {
   const {
     firstName = '',
     lastName = '',
     email = '',
     grade = '',
-    streak = 0,
-    xp = 0,
-    solvedTasks = 0,
   } = user || {};
 
   const [profile, setProfile] = useState({
@@ -46,6 +44,10 @@ export default function ProfilePage({ onNavigate, user, token, onUserUpdate, onL
       grade,
     }));
   }, [firstName, lastName, email, grade]);
+
+  useEffect(() => {
+    onRefreshUser?.();
+  }, []);
 
   const handleAvatarChange = async (file) => {
     setMessage(null);
@@ -149,9 +151,9 @@ export default function ProfilePage({ onNavigate, user, token, onUserUpdate, onL
             />
 
             <ProfileStats
-              xp={xp}
-              streak={streak}
-              solvedTasks={solvedTasks}
+              coins={user.coins || 0}
+              streak={user.streak}
+              solvedTasks={user.solvedTasks}
             />
 
             <ProfileEditForm

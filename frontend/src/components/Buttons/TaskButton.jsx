@@ -13,6 +13,7 @@ export default function TaskButton({
   className = '',
 }) {
   const isMath = variant.startsWith('math');
+  const isRandom = variant === 'random';
 
   const renderMascot = (isTheme = false) => {
     const content = mascotImg
@@ -26,6 +27,19 @@ export default function TaskButton({
       </div>
     );
   };
+
+  if (isRandom) {
+    return (
+      <button className={`task-btn task-btn--random ${className}`} onClick={onClick}>
+        <span className="task-btn__random-dice">🎲</span>
+        <div className="task-btn__text-block">
+          <p className="task-btn__title">Zufällige Aufgabe</p>
+          <p className="task-btn__subtitle">Überrasch mich!</p>
+        </div>
+        <span className="task-btn__random-arrow">→</span>
+      </button>
+    );
+  }
 
   return (
     <button className={`task-btn task-btn--${variant} ${className}`} onClick={onClick}>

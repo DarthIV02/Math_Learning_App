@@ -4,7 +4,9 @@ import { useSessionPersistence } from './useSessionPersistance';
 import { useAttemptQueue } from './useAttemptsQueues';
 import { useProblemTimer } from './useProblemTimer';
 
-export function useSolveProblemsSession({ problems, token }) {
+import { awardProblemCoins } from '../api/users';
+
+export function useSolveProblemsSession({ problems, token, userId, coinsPerProblem = 10, onCoinsEarned }) {
   const [selectedProblem, setSelectedProblem] = useState(1);
   const [tips, setTips] = useState([]);
   const [isLoadingTip, setIsLoadingTip] = useState(false);
@@ -12,7 +14,16 @@ export function useSolveProblemsSession({ problems, token }) {
   const [whiteboardSnapshots, setWhiteboardSnapshots] = useState({});
 
   const sessionId = problems.map((p) => p.id).join('-');
-  const { load, saveDebounced, saveNow, cancelPendingSave } = useSessionPersistence(`session:${sessionId}`);
+
+  const persistenceKey =
+    `session:${userId}:${sessionId}`;
+
+  const {
+    load,
+    saveDebounced,
+    saveNow,
+    cancelPendingSave,
+  } = useSessionPersistence(persistenceKey);
 
   const [answersByProblem, setAnswersByProblem] = useState(
     () => load()?.answersByProblem ?? {}
@@ -26,13 +37,13 @@ export function useSolveProblemsSession({ problems, token }) {
   const problem = problems[problemIndex];
   const answers = answersByProblem[problemIndex] ?? {};
 
-  const { enqueue } = useAttemptQueue(token);
+  const { enqueue, flushQueue } = useAttemptQueue(token);
   const getTimeSpent = useProblemTimer(problemIndex);
 
   const allProblemsSolved =
     problems.length > 0 && Object.keys(solvedProblems).length === problems.length;
-
-  const coinsWon = problems.length * 10;
+  
+  const coinsWon = problems.length * coinsPerProblem;
 
   const answerItems = useMemo(() => {
     if (!problem?.correct_answers) return [];
@@ -105,7 +116,7 @@ export function useSolveProblemsSession({ problems, token }) {
     }
   }, [problem]);
 
-  const handleCheckAnswers = useCallback(() => {
+  const handleCheckAnswers = useCallback(async () => {
     if (!problem) return;
 
     const correct = problem.correct_answers;
@@ -123,7 +134,7 @@ export function useSolveProblemsSession({ problems, token }) {
       score: allCorrect ? 100 : 0,
     });
 
-    if (allCorrect) {
+    if (allCorrect && !solvedProblems[problemIndex]) { // All correct for EVERY problem (not the exercise sheet)
       const nextSolved = {
         ...solvedProblems,
         [problemIndex]: { solvedAt: Date.now() },
@@ -131,12 +142,19 @@ export function useSolveProblemsSession({ problems, token }) {
 
       setSolvedProblems(nextSolved);
 
+      const updatedUser = await awardProblemCoins(
+        problem.id,
+        coinsPerProblem,
+        token
+      );
+      onCoinsEarned?.(coinsPerProblem);
+
       saveNow({
         answersByProblem,
         solvedProblems: nextSolved,
       });
 
-      setFeedback({ type: 'correct', message: 'Super! 🎉' });
+      setFeedback({ type: 'correct', message: 'Super! +10 Münzen 🪙' });
     } else {
       setFeedback({ type: 'wrong', message: 'Fast! Versuch es nochmal 😊' });
     }
@@ -188,5 +206,6 @@ export function useSolveProblemsSession({ problems, token }) {
     handleWhiteboardChange,
     handleCheckAnswers,
     resetSession,
+    flushQueue
   };
 }

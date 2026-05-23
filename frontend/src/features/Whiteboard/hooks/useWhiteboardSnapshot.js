@@ -1,41 +1,49 @@
 import { useCallback, useEffect, useState } from 'react';
-import { isCanvasBlank, restoreCanvasFromImage } from '../utils/canvasUtils';
+import { exportWhiteboardImage, restoreCanvasFromImage } from '../utils/canvasUtils';
 
 export default function useWhiteboardSnapshot({
   canvasRef,
+  boardRef,
   initialSnapshot,
   onSnapshotChange,
+  getStrokes,
 }) {
   const [placed, setPlaced] = useState(initialSnapshot?.placed ?? []);
   const [hasDrawing, setHasDrawing] = useState(Boolean(initialSnapshot?.drawing));
 
-  useEffect(() => {
-    restoreCanvasFromImage(
-      canvasRef.current,
-      initialSnapshot?.drawing,
-      setHasDrawing
-    );
-  }, [canvasRef, initialSnapshot?.drawing]);
+  // useEffect(() => {
+  //   restoreCanvasFromImage(
+  //     canvasRef.current,
+  //     initialSnapshot?.drawing,
+  //     setHasDrawing
+  //   );
+  // }, [canvasRef, initialSnapshot?.drawing]);
 
   const buildSnapshot = useCallback(
     (nextPlaced, hasRealDrawing = null) => {
       const canvas = canvasRef.current;
+      const strokes = getStrokes?.() ?? [];
 
       const hasSomething =
-        hasRealDrawing ?? (canvas && !isCanvasBlank(canvas));
+        hasRealDrawing ?? strokes.length > 0;
 
-      const drawing =
-        hasSomething && canvas
-          ? canvas.toDataURL('image/png')
+      const preview =
+        boardRef?.current
+          ? exportWhiteboardImage({
+              board: boardRef.current,
+              drawingCanvas: canvas,
+              placed: nextPlaced,
+            })
           : null;
 
       return {
         placed: nextPlaced,
-        drawing,
+        strokes,
+        preview,
         hasSomething: Boolean(hasSomething),
       };
     },
-    [canvasRef]
+    [canvasRef, boardRef, getStrokes]
   );
 
   const notifySnapshotChange = useCallback(
@@ -46,7 +54,8 @@ export default function useWhiteboardSnapshot({
 
       onSnapshotChange?.({
         placed: snapshot.placed,
-        drawing: snapshot.drawing,
+        strokes: snapshot.strokes,
+        preview: snapshot.preview,
       });
     },
     [buildSnapshot, onSnapshotChange]
@@ -61,7 +70,7 @@ export default function useWhiteboardSnapshot({
             : updater;
 
         // defer parent update until after this state update finishes
-        queueMicrotask(() => {
+        requestAnimationFrame(() => {
           notifySnapshotChange(next);
         });
 
@@ -86,7 +95,8 @@ export default function useWhiteboardSnapshot({
 
       onSnapshotChange?.({
         placed: [],
-        drawing: null,
+        strokes: [],
+        preview: null,
       });
     },
     [onSnapshotChange]

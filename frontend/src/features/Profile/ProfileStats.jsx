@@ -1,20 +1,24 @@
 import './ProfileStats.css';
 import SurfaceCard from '../../components/SurfaceCard/SurfaceCard';
 
-export default function ProfileStats({ xp, streak, solvedTasks }) {
-  const stats = [
-    { label: 'Coins', value: xp.toString(), icon: '🪙' },
-    {
-      label: streak === 1 ? 'Tag Streak' : 'Tage Streak',
-      value: streak.toString(),
-      icon: '🔥',
-    },
-    {
-      label: 'Aufgaben gelöst',
-      value: solvedTasks.toString(),
-      icon: '✅',
-    },
-  ];
+export default function ProfileStats({
+    coins = 0,
+    streak = 0,
+    solvedTasks = 0,
+  }) {
+    const stats = [
+      { label: 'Coins', value: String(coins), icon: '🪙' },
+      {
+        label: streak === 1 ? 'Tag Streak' : 'Tage Streak',
+        value: String(streak),
+        icon: '🔥',
+      },
+      {
+        label: 'Aufgaben gelöst',
+        value: String(solvedTasks),
+        icon: '✅',
+      },
+    ];
 
   return (
     <div className="profile-stats">

@@ -62,6 +62,8 @@ CREATE TABLE users (
   qr_token UUID UNIQUE DEFAULT uuid_generate_v4(),
   qr_generated_at TIMESTAMPTZ DEFAULT NOW(),
 
+  coins INT NOT NULL DEFAULT 0,
+
   avatar_url TEXT NOT NULL DEFAULT '/uploads/avatars/student-avatar-placeholder.png',
 
   created_by TEXT NOT NULL DEFAULT 'self'
@@ -125,6 +127,19 @@ CREATE TABLE attempts (
   score INT,
 
   attempted_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ─────────────────────────────────────────────
+-- Coins to prevent double reward
+-- ─────────────────────────────────────────────
+
+CREATE TABLE coin_rewards (
+  id SERIAL PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  problem_id INT REFERENCES problems(id) ON DELETE CASCADE,
+  amount INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE (user_id, problem_id)
 );
 
 -- ─────────────────────────────────────────────

@@ -22,7 +22,7 @@ export default function Whiteboard({
   const boardRef = useRef(null);
   const [showTip, setShowTip] = useState(false);
   const [hasStartedDrawing, setHasStartedDrawing] = useState(
-    Boolean(initialSnapshot?.drawing)
+    Boolean(initialSnapshot?.strokes?.length)
   );
 
   const {
@@ -31,6 +31,7 @@ export default function Whiteboard({
     draw,
     stopDrawing,
     clearBoard,
+    getStrokes,
   } = useWhiteboard();
 
   const {
@@ -41,8 +42,10 @@ export default function Whiteboard({
     clearSnapshot,
   } = useWhiteboardSnapshot({
     canvasRef,
+    boardRef,
     initialSnapshot,
     onSnapshotChange,
+    getStrokes,
   });
 
   const dragHandlers = useStickerDrag({
@@ -74,7 +77,8 @@ export default function Whiteboard({
     clearSnapshot(clearBoard);
     onSnapshotChange?.({
       placed: [],
-      drawing: null,
+      strokes: [],
+      preview: null,
     });
   }, [clearSnapshot, clearBoard, onSnapshotChange]);
 
