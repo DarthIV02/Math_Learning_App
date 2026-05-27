@@ -104,6 +104,8 @@ CREATE TABLE problems (
 
   correct_answers JSONB NOT NULL, -- e.g. {"Äpfel": 5, "Bananen": 3}
 
+  ai_full_return JSONB, -- for AI generated questions, saved the full path
+
   tips TEXT[] NOT NULL DEFAULT '{}',
 
   difficulty INT DEFAULT 1,
