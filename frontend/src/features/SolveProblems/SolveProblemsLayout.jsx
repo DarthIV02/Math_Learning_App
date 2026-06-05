@@ -48,9 +48,9 @@ export default function SolveProblemsLayout({
             </SurfaceCard>
           </section>
 
-          <section className="solve-area-whiteboard">
+          <section className="solve-area-whiteboard" data-tutorial="whiteboard">
             <Whiteboard
-              key={problemIndex}
+              snapshotKey={problemIndex}
               stickers={stickers}
               tips={tips}
               isLoadingTip={isLoadingTip}

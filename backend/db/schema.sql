@@ -14,12 +14,6 @@ CREATE TABLE themes (
   name TEXT NOT NULL
 );
 
-CREATE TABLE objects (
-  id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  icon TEXT
-);
-
 -- ─────────────────────────────────────────────
 -- Classes
 -- ─────────────────────────────────────────────
@@ -66,6 +60,8 @@ CREATE TABLE users (
 
   avatar_url TEXT NOT NULL DEFAULT '/uploads/avatars/student-avatar-placeholder.png',
 
+  has_completed_tutorial BOOLEAN DEFAULT false,
+
   created_by TEXT NOT NULL DEFAULT 'self'
     CHECK (created_by IN ('self', 'teacher')),
 
@@ -86,31 +82,147 @@ CREATE TABLE users (
 );
 
 -- ─────────────────────────────────────────────
--- Problems
+-- Difficulty lookup tables
 -- ─────────────────────────────────────────────
+
+CREATE TABLE number_ranges (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  min_value INT NOT NULL,
+  max_value INT NOT NULL,
+  grade INT NOT NULL CHECK (grade IN (3, 4)),
+  score INT NOT NULL CHECK (score BETWEEN 1 AND 3),
+
+  UNIQUE (name, grade),
+  UNIQUE (grade, min_value, max_value)
+);
+
+CREATE TABLE operation_categories (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE, -- addition_subtraction, multiplication_division, mixed_operations
+  difficulty_label TEXT NOT NULL CHECK (difficulty_label IN ('easy', 'medium', 'hard')),
+  score INT NOT NULL CHECK (score BETWEEN 1 AND 3)
+);
+
+CREATE TABLE unknown_positions (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE, -- result_unknown, change_unknown, start_unknown
+  difficulty_label TEXT NOT NULL CHECK (difficulty_label IN ('easy', 'medium', 'hard')),
+  score INT NOT NULL CHECK (score BETWEEN 1 AND 3)
+);
+
+CREATE TABLE linguistic_complexities (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  description TEXT,
+  difficulty_label TEXT NOT NULL CHECK (difficulty_label IN ('easy', 'medium', 'hard')),
+  score INT NOT NULL CHECK (score BETWEEN 1 AND 3)
+);
+
+CREATE TABLE cognitive_demands (
+  id SERIAL PRIMARY KEY,
+  level INT NOT NULL UNIQUE CHECK (level BETWEEN 1 AND 5),
+  name TEXT NOT NULL UNIQUE,
+  description TEXT,
+  difficulty_label TEXT NOT NULL CHECK (difficulty_label IN ('easy', 'medium', 'hard')),
+  score INT NOT NULL CHECK (score BETWEEN 1 AND 3)
+);
+
+CREATE TABLE operation_counts (
+  id SERIAL PRIMARY KEY,
+
+  num_operations INT NOT NULL,
+  grade INT NOT NULL CHECK (grade IN (3, 4)),
+
+  description TEXT,
+
+  difficulty_label TEXT NOT NULL
+    CHECK (difficulty_label IN ('easy', 'medium', 'hard')),
+
+  score INT NOT NULL CHECK (score BETWEEN 1 AND 3),
+
+  UNIQUE (grade, num_operations)
+);
 
 CREATE TABLE problems (
   id SERIAL PRIMARY KEY,
 
-  operation_id INT REFERENCES operations(id),
   theme_id INT REFERENCES themes(id),
 
   grade INT NOT NULL CHECK (grade IN (3, 4)),
   question_text TEXT NOT NULL,
 
-  subject_object TEXT[] NOT NULL DEFAULT '{}', -- e.g. "Äpfel", "Bananen", "Katzen"
+  subject_object TEXT[] NOT NULL DEFAULT '{}',
   emojis TEXT[] NOT NULL DEFAULT '{}',
   colors TEXT[] DEFAULT '{}',
 
-  correct_answers JSONB NOT NULL, -- e.g. {"Äpfel": 5, "Bananen": 3}
-
-  ai_full_return JSONB, -- for AI generated questions, saved the full path
+  correct_answers JSONB NOT NULL,
+  ai_full_return JSONB,
 
   tips TEXT[] NOT NULL DEFAULT '{}',
 
-  difficulty INT DEFAULT 1,
+  -- difficulty dimensions
+  number_range_id INT REFERENCES number_ranges(id),
+  operation_category_id INT REFERENCES operation_categories(id),
+  unknown_position_id INT REFERENCES unknown_positions(id),
+  linguistic_complexity_id INT REFERENCES linguistic_complexities(id),
+  cognitive_demand_id INT REFERENCES cognitive_demands(id),
+  operation_count_id INT REFERENCES operation_counts(id),
+
+  total_difficulty_score INT CHECK (total_difficulty_score BETWEEN 6 AND 18),
+
+  difficulty_label TEXT CHECK (difficulty_label IN ('easy', 'medium', 'hard')),
 
   created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ─────────────────────────────────────────────
+-- Many-to-many: problems ↔ operations & category ↔ operations
+-- ─────────────────────────────────────────────
+
+CREATE TABLE problem_operations (
+  problem_id INT REFERENCES problems(id) ON DELETE CASCADE,
+  operation_id INT REFERENCES operations(id) ON DELETE CASCADE,
+  PRIMARY KEY (problem_id, operation_id)
+);
+
+CREATE TABLE operation_category_operations (
+  operation_category_id INT REFERENCES operation_categories(id) ON DELETE CASCADE,
+  operation_id INT REFERENCES operations(id) ON DELETE CASCADE,
+  PRIMARY KEY (operation_category_id, operation_id)
+);
+
+-- ──────────────────────────────────────────────────────────
+-- Many-to-many: grade + difficulty -> attrs options
+-- ──────────────────────────────────────────────────────────
+
+CREATE TABLE difficulty_profiles (
+  id SERIAL PRIMARY KEY,
+
+  grade INT NOT NULL CHECK (grade IN (3,4)),
+
+  difficulty_label TEXT NOT NULL
+    CHECK (difficulty_label IN ('easy','medium','hard')),
+
+  number_range_id INT REFERENCES number_ranges(id),
+  operation_category_id INT REFERENCES operation_categories(id),
+  unknown_position_id INT REFERENCES unknown_positions(id),
+  linguistic_complexity_id INT REFERENCES linguistic_complexities(id),
+  cognitive_demand_id INT REFERENCES cognitive_demands(id),
+  operation_count_id INT REFERENCES operation_counts(id),
+
+  total_difficulty_score INT NOT NULL,
+
+  UNIQUE (
+    grade,
+    difficulty_label,
+    number_range_id,
+    operation_category_id,
+    unknown_position_id,
+    linguistic_complexity_id,
+    cognitive_demand_id,
+    operation_count_id
+  )
 );
 
 -- ─────────────────────────────────────────────
@@ -156,148 +268,3 @@ CREATE TABLE sessions (
   started_at TIMESTAMPTZ DEFAULT NOW(),
   ended_at TIMESTAMPTZ
 );
-
--- ─────────────────────────────────────────────
--- Init problems
--- ─────────────────────────────────────────────
-
-INSERT INTO operations (name)
-VALUES ('addition'), ('subtraktion'), ('multiplikation'), ('division'), ('multiple');
-
-INSERT INTO themes (name)
-VALUES ('geld'), ('gewichte'), ('längen'), ('other');
-
-INSERT INTO problems (
-  operation_id,
-  theme_id,
-  grade,
-  question_text,
-  subject_object,
-  emojis,
-  colors,
-  correct_answers,
-  tips,
-  difficulty
-)
-VALUES
-(
-  4,
-  4,
-  4,
-  'Lisa hat 600 Legosteine. Die Hälfte davon ist rot. Die andere Hälfte besteht zu gleichen Teilen aus gelben und blauen Steinen. Wie viele Legosteine sind es jeweils?',
-  ARRAY['Rot Lego', 'Gelb Lego', 'Blau Lego'],
-  ARRAY['🧱', '🧱', '🧱'],
-  ARRAY['red', 'yellow', 'blue'],
-  '{"Rot Lego": 300, "Gelb Lego": 150, "Blau Lego": 150}',
-  ARRAY['Beginne damit, die Blöcke von rechts herüberzuziehen. Kannst du herausfinden, wie viele davon rot sind?'],
-  2
-),
-(
-  2,
-  1,
-  4,
-  'Tim hat 315 Euro Taschengeld gespart. Er möchte sich ein Fahrrad für 250 Euro, eine Hose für 42 Euro und ein Buch für 19 Euro kaufen. Reicht Tims Taschengeld aus?',
-  ARRAY['Fahrrad', 'Hose', 'Buch', 'Euro'],
-  ARRAY['🚲', '👖', '📚', '💰'],
-  ARRAY['', '', ''],
-  '{"Ausreichend?": "Ja"}',
-  ARRAY['Beginnen Sie damit, die Ausgaben aufzuschreiben. Wie viel kostet jedes Objekt?'],
-  2
-),
-(
-  3,
-  4,
-  3,
-  'Du backst mit Oma 3 Pizzen. Du legst auf jede Pizza 3 Scheiben Salami. Oma legt auf jeden Pizza nochmal 4 Scheiben dazu. Wie viele Scheiben Salami sind das?',
-  ARRAY['Pizzen', 'Salami'],
-  ARRAY['🍕', '🔴'],
-  ARRAY['', ''],
-  '{"Scheiben Salami": 21}',
-  ARRAY['Beginnen Sie damit, die Pizzen und Salamis zu ziehen.'],
-  2
-),
-(
-  1,
-  1,
-  4,
-  'Heidi hat 146 Euro gespart. Sie will sich eine Hose für 134 Euro und ein Buch für 17 Euro kaufen. Reicht das gesparte Geld aus?',
-  ARRAY['Euro', 'Hose', 'Buch'],
-  ARRAY['🪙', '👖', '📘'],
-  ARRAY['', '', ''],
-  '{"Ausreichend?": "Nein"}',
-  ARRAY['Beginnen Sie damit anzugeben, wie viel Geld Sie für jedes Objekt benötigen.'],
-  1
-),
-(
-  2,
-  1,
-  3,
-  'Michas Papa hat 380 Euro im Geldbeutel. Er kauft ein Radio. Jetzt hat er noch 48 Euro. Wie viel hat das Radio gekostet?',
-  ARRAY['Euro', 'Radio'],
-  ARRAY['🪙', '📻'],
-  ARRAY['', ''],
-  '{"Radio": 332}',
-  ARRAY['Beginne damit aufzuschreiben, wie viel Geld er hatte und wie viel er nach dem Radio noch hatte.'],
-  3
-),
-(
-  4,
-  1,
-  4,
-  'Will hat doppelt so viel Geld in der Spardose wie Sam. Zusammen haben sie 210 Euro. Wie viel Geld hat Willi, wie viel hat Sam?',
-  ARRAY['Spardose', 'Euro', 'Kind'],
-  ARRAY['🐖', '🪙', '👦'],
-  ARRAY['', ''],
-  '{"Will": 140, "Sam": 70}',
-  ARRAY['Versuchen Sie, für jeden Schüler ein Sparschwein mit dem gleichen Geldbetrag herauszuholen'],
-  3
-),
-(
-  1,
-  4,
-  3,
-  'Ein Tierpark bestellt Futter für seine Tiere: 325 kg Heu für die Zebras, 468 kg Fisch für die Pinguine und 129 kg Fleisch für die Löwen. Wie viel Kilogramm Futter wurden insgesamt bestellt?',
-  ARRAY['Heu', 'Fisch', 'Fleisch'],
-  ARRAY['🥬', '🐟', '🥩'],
-  ARRAY['', ''],
-  '{"Gesmamtfutter": 922}',
-  ARRAY['Beginne damit, die verschiedenen Futtersorten herauszuziehen. Wie viel wiegt jede Sorte?'],
-  1
-),
-(
-  4,
-  4,
-  3,
-  'Der Bauer verpackt Äpfel in Kisten. Immer 10 Äpfel passen in eine Kiste. Wie viele Kisten braucht er für 80 Äpfel?',
-  ARRAY['Kiste', 'Äpfel'],
-  ARRAY['📦', '🍎'],
-  ARRAY['', ''],
-  '{"Kisten": 8}',
-  ARRAY['Beginne damit, die Äpfel in die Kisten zu ziehen.'],
-  1
-),
-(
-  3,
-  4,
-  3,
-  'Nora braucht für ein Kastanienmännchen 6 Kastanien. Wie viele Kastanien braucht sie für 5 Männchen?',
-  ARRAY['Kastanien', 'Männchen'],
-  ARRAY['🌰', '🕴️'],
-  ARRAY['', ''],
-  '{"Kastanien": 30}',
-  ARRAY['Beginnen Sie damit, die Kastanien pro Person zu zeichnen.'],
-  2
-),
-(
-  4,
-  4,
-  3,
-  'Mama kauft 48 Erdbeeren und teilt sie auf 6 Schüsseln auf. Wie viele Erdbeeren sind in einer Schüssel?',
-  ARRAY['Erdbeeren', 'Schüsseln'],
-  ARRAY['🍓', '🥣'],
-  ARRAY['', ''],
-  '{"Erdbeeren": 8}',
-  ARRAY['Beginnen Sie damit, die Erdbeeren pro Schüssel zu zeichnen.'],
-  1
-)
-;

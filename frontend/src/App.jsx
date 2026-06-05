@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 import { normalizeUser } from './utils/normalizeUser';
 import { saveAvatarUrl } from './lib/avatar';
+
+import { TutorialProvider } from './context/TutorialContext';
+import TutorialOverlay from './components/Tutorial/TutorialOverlay';
 
 import { updateUser, fetchCurrentUser } from './api/users';
 import { fetchProblems } from './api/problem';
@@ -21,6 +24,10 @@ function App() {
   const [token, setToken] = useState(null);
   const [pageState, setPageState] = useState({});
   const [problemFilter, setProblemFilter] = useState(null);
+  const startTutorialRef = useRef(null); // TutorialProvider will register its start() here
+  const tutorialGoToStepRef = useRef(null);
+  const hasTriedStartingTutorialRef = useRef(false);
+  const tutorialCurrentStepRef = useRef(null);
 
   const restoreSession = async (savedToken) => {
     try {
@@ -59,6 +66,23 @@ function App() {
       restoreSession(savedToken);
     }
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn || !user) return;
+    if (hasTriedStartingTutorialRef.current) return;
+
+    hasTriedStartingTutorialRef.current = true;
+
+    const shouldStartTutorial = !user.hasCompletedTutorial;
+
+    console.log('Should start tutorial:', shouldStartTutorial);
+
+    if (shouldStartTutorial) {
+      setTimeout(() => {
+        startTutorialRef.current?.();
+      }, 500);
+    }
+  }, [isLoggedIn, user]);
 
   const handleAuthSuccess = (result) => {
     const rawUser = result.user || result;
@@ -112,6 +136,7 @@ function App() {
     // Remove auth data
     localStorage.removeItem('token');
     localStorage.removeItem('avatarUrl');
+    hasTriedStartingTutorialRef.current = false;
 
     // Remove queued attempts
     localStorage.removeItem('attempt_queue');
@@ -155,8 +180,17 @@ function App() {
 
     setProblemFilter(finalFilter);
     handleNavigate('solve-problems', { problems });
-  };
 
+    const isTutorialRandomStep =
+      tutorialCurrentStepRef.current?.id === 'random';
+
+    if (isTutorialRandomStep) {
+      setTimeout(() => {
+        tutorialGoToStepRef.current?.('whiteboard', { navigate: false });
+      }, 500);
+    }
+  };
+  
   const handlePlayAgain = async () => {
     if (!problemFilter) return;
 
@@ -191,6 +225,21 @@ function App() {
       };
     });
   };
+
+  const handleTutorialComplete = useCallback(async () => {
+    if (!user?.id || !token) return;
+
+    await updateUser(
+      user.id,
+      { hasCompletedTutorial: true },
+      token
+    );
+
+    setUser((prev) => ({
+      ...prev,
+      hasCompletedTutorial: true,
+    }));
+  }, [user?.id, token]);
 
   if (!isLoggedIn) {
     if (currentPage === 'register') {
@@ -260,7 +309,18 @@ function App() {
     }
   };
 
-  return renderPage();
+  return (
+    <TutorialProvider
+      onNavigate={handleNavigate}
+      startRef={startTutorialRef}
+      goToStepRef={tutorialGoToStepRef}
+      onComplete={handleTutorialComplete}
+      currentStepRef={tutorialCurrentStepRef}
+    >
+      <TutorialOverlay />
+      {renderPage()}
+    </TutorialProvider>
+  );
 }
 
 export default App;

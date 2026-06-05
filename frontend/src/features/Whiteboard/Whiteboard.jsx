@@ -12,6 +12,7 @@ import StickerTray from './components/StickerTray';
 import TipBubble from './components/TipBubble';
 
 export default function Whiteboard({
+  snapshotKey,
   stickers = [],
   tips = [],
   isLoadingTip = false,
@@ -32,6 +33,7 @@ export default function Whiteboard({
     stopDrawing,
     clearBoard,
     getStrokes,
+    setStrokes,
   } = useWhiteboard();
 
   const {
@@ -44,8 +46,10 @@ export default function Whiteboard({
     canvasRef,
     boardRef,
     initialSnapshot,
+    snapshotKey,
     onSnapshotChange,
     getStrokes,
+    setStrokes,
   });
 
   const dragHandlers = useStickerDrag({
@@ -153,6 +157,7 @@ export default function Whiteboard({
           aria-expanded={showTip}
           aria-label="Tipps anzeigen"
           disabled={isLoadingTip}
+          data-tutorial="tips-button"
         >
           💡 <span>{isLoadingTip ? 'Denke...' : 'Tipps'}</span>
         </button>

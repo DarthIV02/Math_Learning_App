@@ -5,15 +5,15 @@ const BASE_URL =
   import.meta.env.VITE_API_URL || `${API_PROTOCOL}//${API_HOST}:3001/api`;
 
 export async function fetchProblems({
-  operation_id,
-  theme_id,
+  operation,
+  theme,
   difficulty,
   grade,
 }) {
   const params = new URLSearchParams();
 
-  if (operation_id) params.set('operation_id', operation_id);
-  if (theme_id) params.set('theme_id', theme_id);
+  if (operation) params.set('operation', operation);
+  if (theme) params.set('theme', theme);
   if (difficulty) params.set('difficulty', difficulty);
   if (grade) params.set('grade', grade);
   params.set('unsolvedOnly', true);

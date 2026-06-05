@@ -157,6 +157,15 @@ export default function useWhiteboard() {
     });
   };
 
+  const setStrokes = (strokes = []) => {
+    strokesRef.current = strokes;
+
+    const canvas = canvasRef.current;
+    if (!ctx || !canvas) return;
+
+    redrawStrokes(ctx, canvas);
+  };
+
   const clearBoard = () => {
     const canvas = canvasRef.current;
     if (!ctx || !canvas) return;
@@ -178,5 +187,6 @@ export default function useWhiteboard() {
     stopDrawing,
     clearBoard,
     getStrokes,
+    setStrokes,
   };
 }

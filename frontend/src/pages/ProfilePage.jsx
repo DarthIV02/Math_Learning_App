@@ -12,6 +12,8 @@ import { logoutUser } from '../api/auth';
 
 import { saveAvatarUrl } from '../lib/avatar';
 
+import { useTutorial } from '../context/TutorialContext';
+
 import './styles/ProfilePage.css';
 
 export default function ProfilePage({ onNavigate, user, token, onRefreshUser, onUserUpdate, onLogout }) {
@@ -34,6 +36,7 @@ export default function ProfilePage({ onNavigate, user, token, onRefreshUser, on
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [avatarSrc, setAvatarSrcState] = useState(null);
+  const { replay } = useTutorial();
 
   useEffect(() => {
     setProfile((prev) => ({
@@ -165,6 +168,20 @@ export default function ProfilePage({ onNavigate, user, token, onRefreshUser, on
             />
 
             <button
+              onClick={replay}
+              className="profile-tutorial-replay"
+            >
+              <span className="profile-tutorial-replay__icon">🎓</span>
+
+              <div className="profile-tutorial-replay__content">
+                <strong>Tutorial wiederholen</strong>
+                <span>Schau dir die Einführung erneut an</span>
+              </div>
+
+              <span className="profile-tutorial-replay__arrow">→</span>
+            </button>
+
+            <button
               onClick={handleLogout}
               className="
                 w-full mt-4 py-3 rounded-2xl
@@ -176,11 +193,10 @@ export default function ProfilePage({ onNavigate, user, token, onRefreshUser, on
             </button>
           </div>
         </main>
-
-        <nav className="profile-page__nav">
-          <BottomNav onNavigate={onNavigate} activePage="profile" />
-        </nav>
       </div>
+      <nav className="profile-page__nav">
+        <BottomNav onNavigate={onNavigate} activePage="profile" />
+      </nav>
     </div>
   );
 }

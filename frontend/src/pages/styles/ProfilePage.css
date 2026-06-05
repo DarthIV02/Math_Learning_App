@@ -1,20 +1,24 @@
 @reference "tailwindcss";
 
 .profile-page {
-  @apply relative h-screen overflow-hidden;
+  @apply relative overflow-hidden;
+  height: 100dvh;
 }
 
 .profile-page__content {
-  @apply relative z-[3] h-full;
+  @apply relative z-[3];
+  height: 100dvh;
+
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  padding-bottom: 120px;
+  grid-template-rows: minmax(0, 1fr);
 }
 
 .profile-page__scroll {
   @apply overflow-y-auto px-4 py-4;
   min-height: 0;
   -webkit-overflow-scrolling: touch;
+
+  padding-bottom: calc(120px + env(safe-area-inset-bottom));
 }
 
 .profile-page__stack {
@@ -23,4 +27,76 @@
 
 .profile-page__nav {
   @apply relative z-10;
+}
+
+.profile-tutorial-replay {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding: 14px 18px;
+
+  border: 2px solid rgba(255,255,255,0.7);
+  border-radius: 24px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.92) 0%,
+      rgba(244,247,239,0.88) 100%
+    );
+
+  box-shadow:
+    0 10px 24px rgba(87,112,86,0.14),
+    inset 0 2px 0 rgba(255,255,255,0.95);
+
+  cursor: pointer;
+
+  transition:
+    transform 120ms ease,
+    box-shadow 160ms ease;
+
+  text-align: left;
+}
+
+.profile-tutorial-replay:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 14px 28px rgba(87,112,86,0.18),
+    inset 0 2px 0 rgba(255,255,255,0.95);
+}
+
+.profile-tutorial-replay:active {
+  transform: scale(0.98);
+}
+
+.profile-tutorial-replay__icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.profile-tutorial-replay__content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.profile-tutorial-replay__content strong {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #2c4730;
+}
+
+.profile-tutorial-replay__content span {
+  font-size: 0.92rem;
+  color: #617064;
+}
+
+.profile-tutorial-replay__arrow {
+  font-size: 1.3rem;
+  color: #4d6452;
 }

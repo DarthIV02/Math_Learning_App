@@ -11,6 +11,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./backend/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./backend/db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U mathapp"]
       interval: 5s
@@ -20,7 +21,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: backend/Dockerfile
     restart: unless-stopped
     ports:
       - "3001:3001"
@@ -31,6 +32,16 @@ services:
         condition: service_healthy
     volumes:
       - ./backend/uploads:/math_learning_app/uploads
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3002:80"
+    depends_on:
+      - backend
 
 volumes:
   pgdata:

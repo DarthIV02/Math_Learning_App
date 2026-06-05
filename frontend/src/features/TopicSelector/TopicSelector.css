@@ -90,6 +90,17 @@
 }
 
 /* ── Section headers ── */
+.topic-selector__sections {
+  grid-column: 1 / -1;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 16px;
+
+  width: 100%;
+  min-width: 0;
+}
+
 .topic-selector__section-header {
   display: flex;
   align-items: center;
@@ -188,6 +199,9 @@
 
   .topic-selector__section-title {font-size: clamp(17px, 1.4vw, 17px);}
   .topic-selector__section-sub {font-size: clamp(14px, 1.4vw, 14px);}
+  .topic-selector__sections {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* ── Only when buttons themselves stack vertically ── */

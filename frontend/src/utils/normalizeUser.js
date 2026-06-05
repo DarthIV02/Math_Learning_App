@@ -12,4 +12,9 @@ export const normalizeUser = (user = {}) => ({
   coins: user.coins ?? 0,
   streak: user.streak ?? 0,
   solvedTasks: user.solvedTasks ?? user.solved_tasks ?? 0,
+  hasCompletedTutorial:
+    user.hasCompletedTutorial ??
+    user.has_completed_tutorial ??
+    user.tutorial_complete ??
+    false,
 });

@@ -1,14 +1,16 @@
 @reference "tailwindcss";
 
 .home-page {
-  @apply h-screen overflow-hidden;
+  @apply min-h-screen overflow-y-auto;
 }
 
 .home-page__content {
-  @apply relative z-[3] h-full;
+  @apply relative z-[3] min-h-screen;
+
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  padding-bottom: 120px;
+
+  padding-bottom: calc(140px + env(safe-area-inset-bottom));
 }
 
 /* header */

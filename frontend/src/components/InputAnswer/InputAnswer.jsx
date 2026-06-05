@@ -27,7 +27,7 @@ export default function InputAnswer({
 
   return (
     <SurfaceCard className="answer-input">
-      <div className="answer-input__list">
+      <div className="answer-input__list" data-tutorial="answer-input">
         {items.map((item) => (
           <label key={item.key} className="answer-input__row">
             <span className="answer-input__label">{item.label}</span>

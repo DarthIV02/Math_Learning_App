@@ -5,3 +5,4 @@ dist
 .vscode
 .idea
 *.pem
+**/.env.local

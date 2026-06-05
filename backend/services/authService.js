@@ -22,6 +22,7 @@ function formatUser(user) {
     email: user.email,
     grade: user.grade,
     avatarUrl: user.avatar_url,
+    has_completed_tutorial: user.has_completed_tutorial ?? false,
   };
 }
 
@@ -218,7 +219,7 @@ async function loginOrRegister(email, password) {
 
 async function qrLogin(qr_token) {
   const result = await db.query(
-    `SELECT id, firstname, lastname, email, grade, auth_type, avatar_url
+    `SELECT id, firstname, lastname, email, grade, auth_type, avatar_url, has_completed_tutorial
      FROM users
      WHERE qr_token = $1 AND auth_type = 'qr'`,
     [qr_token]
@@ -257,7 +258,7 @@ async function anonymousLogin(display_name = 'Gast') {
       (firstname, lastname, email, grade, auth_type, created_by)
      VALUES 
       ($1, $2, $3, $4, 'anonymous', 'self')
-     RETURNING id, firstname, lastname, email, grade, auth_type, avatar_url`,
+     RETURNING id, firstname, lastname, email, grade, auth_type, avatar_url, has_completed_tutorial`,
     [firstname, lastname, email, grade]
   );
 

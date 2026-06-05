@@ -91,10 +91,10 @@ export function useSolveProblemsSession({ problems, token, userId, coinsPerProbl
   );
 
   const handleWhiteboardChange = useCallback(
-    ({ placed, drawing }) => {
+    (snapshot) => {
       setWhiteboardSnapshots((prev) => ({
         ...prev,
-        [problemIndex]: { placed, drawing },
+        [problemIndex]: snapshot,
       }));
     },
     [problemIndex]

@@ -10,16 +10,16 @@ import weights from '../../assets/images/weights.png';
 
 // Match IDs from your DB seed:
 const OPERATION_TOPICS = [
-  { variant: 'math-addition',       icon: '➕', title: 'Addition',       subtitle: 'Zusammenzählen', formula: '24 + 17 = ?', operation_id: 1 },
-  { variant: 'math-subtraction',    icon: '➖', title: 'Subtraktion',    subtitle: 'Wegnehmen',      formula: '42 – 15 = ?', operation_id: 2 },
-  { variant: 'math-multiplication', icon: '✖️', title: 'Multiplikation', subtitle: 'Malnehmen',      formula: '6 × 7 = ?',   operation_id: 3 },
-  { variant: 'math-division',       icon: '➗', title: 'Division',       subtitle: 'Aufteilen',      formula: '36 : 4 = ?',  operation_id: 4 },
+  { variant: 'math-addition',       icon: '➕', title: 'Addition',       subtitle: 'Zusammenzählen', formula: '24 + 17 = ?', operation: 'addition' },
+  { variant: 'math-subtraction',    icon: '➖', title: 'Subtraktion',    subtitle: 'Wegnehmen',      formula: '42 – 15 = ?', operation: 'subtraction' },
+  { variant: 'math-multiplication', icon: '✖️', title: 'Multiplikation', subtitle: 'Malnehmen',      formula: '6 × 7 = ?',   operation: 'multiplication' },
+  { variant: 'math-division',       icon: '➗', title: 'Division',       subtitle: 'Aufteilen',      formula: '36 : 4 = ?',  operation: 'division' },
 ];
 
 const THEME_TOPICS = [
-  { title: 'Geld',     subtitle: 'Rechne mit Münzen und Scheinen',  mascotImg: money,    mascotAlt: 'Münzen und Scheine',  theme_id: 1 },
-  { title: 'Gewichte', subtitle: 'Rechne mit Gewichten und Massen', mascotImg: weights,  mascotAlt: 'Waage mit Gewichten', theme_id: 2 },
-  { title: 'Längen',   subtitle: 'Rechne mit Längen und Abständen', mascotImg: distance, mascotAlt: 'Lineal und Maßband',  theme_id: 3 },
+  { title: 'Geld',     subtitle: 'Rechne mit Münzen und Scheinen',  mascotImg: money,    mascotAlt: 'Münzen und Scheine',  theme: "geld" },
+  { title: 'Gewichte', subtitle: 'Rechne mit Gewichten und Massen', mascotImg: weights,  mascotAlt: 'Waage mit Gewichten', theme: "gewichte" },
+  { title: 'Längen',   subtitle: 'Rechne mit Längen und Abständen', mascotImg: distance, mascotAlt: 'Lineal und Maßband',  theme: "längen" },
 ];
 
 const DIFFICULTIES = [
@@ -35,7 +35,7 @@ const DIFFICULTIES_SHORT = [
 ];
 
 // Map the difficulty key your context uses to the numeric DB value
-const DIFFICULTY_MAP = { leicht: 1, mittel: 2, schwer: 3 };
+const DIFFICULTY_MAP = { leicht: "easy", mittel: "medium", schwer: "hard"};
 
 export default function TopicSelector({ onSelect, disabled }) {
   const { selected, setSelected } = useDifficulty();
@@ -55,7 +55,7 @@ export default function TopicSelector({ onSelect, disabled }) {
     <SurfaceCard className="topic-selector-card">
       <div className="topic-selector">
 
-        <div className="topic-selector__difficulty">
+        <div className="topic-selector__difficulty" data-tutorial="difficulty-tabs">
           <DifficultyButton
             selected={selected}
             onSelect={setSelected}
@@ -66,44 +66,46 @@ export default function TopicSelector({ onSelect, disabled }) {
           />
         </div>
 
-        <div className="topic-selector__section">
-          <div className="topic-selector__section-header">
-            <span className="topic-selector__section-icon">🔢</span>
-            <div>
-              <h2 className="topic-selector__section-title">Rechenarten</h2>
-              <p className="topic-selector__section-sub">Wähle eine Rechenoperation</p>
+        <div data-tutorial="topic-grid" className="topic-selector__sections">
+          <div className="topic-selector__section">
+            <div className="topic-selector__section-header">
+              <span className="topic-selector__section-icon">🔢</span>
+              <div>
+                <h2 className="topic-selector__section-title">Rechenarten</h2>
+                <p className="topic-selector__section-sub">Wähle eine Rechenoperation</p>
+              </div>
+            </div>
+            <div className="topic-selector__math-grid">
+              {OPERATION_TOPICS.map(({ operation, ...props }) => (
+                <TaskButton
+                  key={operation}
+                  {...props}
+                  disabled={disabled}
+                  onClick={() => handleSelect({ operation })}
+                />
+              ))}
             </div>
           </div>
-          <div className="topic-selector__math-grid">
-            {OPERATION_TOPICS.map(({ operation_id, ...props }) => (
-              <TaskButton
-                key={operation_id}
-                {...props}
-                disabled={disabled}
-                onClick={() => handleSelect({ operation_id })}
-              />
-            ))}
-          </div>
-        </div>
 
-        <div className="topic-selector__section">
-          <div className="topic-selector__section-header">
-            <span className="topic-selector__section-icon">🌍</span>
-            <div>
-              <h2 className="topic-selector__section-title">Themen</h2>
-              <p className="topic-selector__section-sub">Rechnen mit Alltagssituationen</p>
+          <div className="topic-selector__section">
+            <div className="topic-selector__section-header">
+              <span className="topic-selector__section-icon">🌍</span>
+              <div>
+                <h2 className="topic-selector__section-title">Themen</h2>
+                <p className="topic-selector__section-sub">Rechnen mit Alltagssituationen</p>
+              </div>
             </div>
-          </div>
-          <div className="topic-selector__theme-grid">
-            {THEME_TOPICS.map(({ theme_id, ...props }) => (
-              <TaskButton
-                key={theme_id}
-                variant="theme"
-                {...props}
-                disabled={disabled}
-                onClick={() => handleSelect({ theme_id })}
-              />
-            ))}
+            <div className="topic-selector__theme-grid">
+              {THEME_TOPICS.map(({ theme, ...props }) => (
+                <TaskButton
+                  key={theme}
+                  variant="theme"
+                  {...props}
+                  disabled={disabled}
+                  onClick={() => handleSelect({ theme })}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
@@ -114,7 +116,7 @@ export default function TopicSelector({ onSelect, disabled }) {
           <span className="topic-selector__random-divider-line" />
         </div>
 
-        <div className="topic-selector__random">
+        <div className="topic-selector__random" data-tutorial="random-btn">
           <TaskButton
             key={"random"}
             variant="random"

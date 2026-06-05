@@ -62,6 +62,7 @@ async function updateUser(id, data) {
     email,
     grade,
     password,
+    hasCompletedTutorial,
   } = data;
 
   let passwordHash = null;
@@ -76,15 +77,16 @@ async function updateUser(id, data) {
        firstname = COALESCE($1, firstname),
        lastname = COALESCE($2, lastname),
        grade = COALESCE($3, grade),
-       password_hash = COALESCE($4, password_hash)
-     WHERE id = $5
-     RETURNING id, firstname, lastname, email, grade, auth_type`,
+       password_hash = COALESCE($4, password_hash),
+       has_completed_tutorial = COALESCE($5, has_completed_tutorial)
+     WHERE id = $6
+     RETURNING id, firstname, lastname, email, grade, auth_type, has_completed_tutorial`,
     [
-
-      firstName || null,
-      lastName || null,
-      grade || null,
+      firstName ?? null,
+      lastName ?? null,
+      grade ?? null,
       passwordHash,
+      hasCompletedTutorial ?? null,
       id,
     ]
   );
@@ -105,7 +107,8 @@ async function updateUser(id, data) {
       `${user.firstname || ''} ${user.lastname || ''}`.trim() ||
       user.email,
     email: user.email,
-    grade: user.grade
+    grade: user.grade,
+    hasCompletedTutorial: user.has_completed_tutorial,
   };
 }
 

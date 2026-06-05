@@ -57,9 +57,10 @@ export default function SelectTopicPage({ onNavigate, user, onTopicSelect }) {
           <main className="select-topic-page__main">
             <TopicSelector onSelect={handleTopicSelect} disabled={loading} />
           </main>
-
-          <BottomNav onNavigate={onNavigate} activePage="select-topic" />
         </div>
+
+        <BottomNav onNavigate={onNavigate} activePage="select-topic" />
+        
       </div>
     </DifficultyProvider>
   );

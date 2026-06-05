@@ -13,14 +13,15 @@ export default function HomePage({ onNavigate, user }) {
 
       <div className="home-page__content">
         <header className="home-page__header">
-          <SurfaceCard soft={true} className='home-page__greeting'>
-            <h1 className="home-page__greeting-title">
-              Hey {user?.firstName || user?.firstname || 'du'}!
-            </h1>
-            <p className="home-page__greeting-subtitle">Bereit für eine Knobelei?</p>
-          </SurfaceCard>
-          
-          <StatBubble coins={6} user={user}/>
+          <div data-tutorial="home-welcome">
+            <SurfaceCard soft={true} className='home-page__greeting'>
+              <h1 className="home-page__greeting-title">
+                Hey {user?.firstName || user?.firstname || 'du'}!
+              </h1>
+              <p className="home-page__greeting-subtitle">Bereit für eine Knobelei?</p>
+            </SurfaceCard>
+          </div>
+          <StatBubble coins={6} user={user} data-tutorial="stat-bubble"/>
         </header>
 
         <main className="home-page__scroll">
@@ -32,12 +33,11 @@ export default function HomePage({ onNavigate, user }) {
             <UploadProblem />
           </section>
         </main>
-
-        <nav className="home-page__nav">
-          <BottomNav onNavigate={onNavigate} activePage="home" />
-        </nav>
-
       </div>
+      
+      <nav className="home-page__nav">
+        <BottomNav onNavigate={onNavigate} activePage="home" />
+      </nav>
     </div>
   );
 }

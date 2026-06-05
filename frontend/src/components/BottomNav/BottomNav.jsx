@@ -7,6 +7,7 @@ export default function BottomNav({ onNavigate, activePage }) {
         type="button"
         className={`bottom-nav__item ${activePage === 'home' ? 'bottom-nav__item--active' : ''}`}
         onClick={() => onNavigate('home')}
+        data-tutorial="home-nav"
       >
         <span className="bottom-nav__icon" aria-hidden="true">🏠</span>
         <span className="bottom-nav__label">Start</span>
@@ -18,6 +19,7 @@ export default function BottomNav({ onNavigate, activePage }) {
         type="button" 
         className={`bottom-nav__item ${activePage === 'select-topic' ? 'bottom-nav__item--active' : ''}`}
         onClick={() => onNavigate('select-topic')}
+        data-tutorial="topic-selection-nav"
       >
         <span className="bottom-nav__icon" aria-hidden="true">✏️</span>
         <span className="bottom-nav__label">Üben</span>

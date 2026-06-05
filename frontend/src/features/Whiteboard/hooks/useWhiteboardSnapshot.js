@@ -1,23 +1,23 @@
 import { useCallback, useEffect, useState } from 'react';
-import { exportWhiteboardImage, restoreCanvasFromImage } from '../utils/canvasUtils';
+import { exportWhiteboardImage } from '../utils/canvasUtils';
 
 export default function useWhiteboardSnapshot({
   canvasRef,
   boardRef,
   initialSnapshot,
+  snapshotKey,
   onSnapshotChange,
   getStrokes,
+  setStrokes,
 }) {
   const [placed, setPlaced] = useState(initialSnapshot?.placed ?? []);
   const [hasDrawing, setHasDrawing] = useState(Boolean(initialSnapshot?.drawing));
 
-  // useEffect(() => {
-  //   restoreCanvasFromImage(
-  //     canvasRef.current,
-  //     initialSnapshot?.drawing,
-  //     setHasDrawing
-  //   );
-  // }, [canvasRef, initialSnapshot?.drawing]);
+  useEffect(() => {
+    setPlaced(initialSnapshot?.placed ?? []);
+    setStrokes?.(initialSnapshot?.strokes ?? []);
+    setHasDrawing(Boolean(initialSnapshot?.strokes?.length));
+  }, [snapshotKey]);
 
   const buildSnapshot = useCallback(
     (nextPlaced, hasRealDrawing = null) => {
