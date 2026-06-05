@@ -21,15 +21,13 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     restart: unless-stopped
-    ports:
-      - "3001:3001"
+    expose:
+      - "3001"
     env_file:
       - ./backend/.env
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - ./backend/uploads:/math_learning_app/uploads
 
   frontend:
     build:
