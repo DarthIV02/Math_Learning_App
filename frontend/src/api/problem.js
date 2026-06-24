@@ -41,3 +41,19 @@ export async function fetchProblems({
 
   return data;
 }
+
+export async function fetchGenerationStatus(requestId) {
+  const token = localStorage.getItem('token');
+
+  const res = await fetch(`${BASE_URL}/problems/generation-status?requestId=${requestId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
+  });
+
+  const data = await res.json();
+
+  console.log(data)
+
+  if (!res.ok) throw new Error(data.error || 'Status konnte nicht geladen werden.');
+  return data;
+}

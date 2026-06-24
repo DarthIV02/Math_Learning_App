@@ -1,4 +1,5 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ─────────────────────────────────────────────
 -- Lookup tables
@@ -132,7 +133,6 @@ CREATE TABLE operation_counts (
   id SERIAL PRIMARY KEY,
 
   num_operations INT NOT NULL,
-  grade INT NOT NULL CHECK (grade IN (3, 4)),
 
   description TEXT,
 
@@ -141,7 +141,7 @@ CREATE TABLE operation_counts (
 
   score INT NOT NULL CHECK (score BETWEEN 1 AND 3),
 
-  UNIQUE (grade, num_operations)
+  UNIQUE (num_operations)
 );
 
 CREATE TABLE problems (
@@ -257,7 +257,7 @@ CREATE TABLE coin_rewards (
 );
 
 -- ─────────────────────────────────────────────
--- Sessions
+-- Sessions - during usage
 -- ─────────────────────────────────────────────
 
 CREATE TABLE sessions (
@@ -267,4 +267,21 @@ CREATE TABLE sessions (
 
   started_at TIMESTAMPTZ DEFAULT NOW(),
   ended_at TIMESTAMPTZ
+);
+
+CREATE TABLE generation_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending',
+  quantity INTEGER NOT NULL,
+  error TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  completed_at TIMESTAMPTZ
+);
+
+CREATE TABLE generation_request_problems (
+  generation_request_id UUID NOT NULL REFERENCES generation_requests(id) ON DELETE CASCADE,
+  placeholder_index INTEGER NOT NULL,
+  problem_id INTEGER NOT NULL REFERENCES problems(id),
+  PRIMARY KEY (generation_request_id, placeholder_index)
 );

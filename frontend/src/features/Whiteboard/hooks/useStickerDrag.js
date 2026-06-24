@@ -2,9 +2,9 @@ import { useCallback, useRef } from 'react';
 
 export default function useStickerDrag({ boardRef, updatePlaced }) {
   const draggingFromTray = useRef(null);
-  const touchSticker = useRef(null);
-  const touchGhost = useRef(null);
   const draggingPlaced = useRef(null);
+  const isDraggingNative = useRef(false);
+  const pointerGhost = useRef(null);
 
   const MIN_DISTANCE_X = 45;
   const MIN_DISTANCE_Y = 75;
@@ -12,7 +12,6 @@ export default function useStickerDrag({ boardRef, updatePlaced }) {
   const isTooClose = (a, b) => {
     const dx = Math.abs(a.x - b.x);
     const dy = Math.abs(a.y - b.y);
-
     return dx < MIN_DISTANCE_X && dy < MIN_DISTANCE_Y;
   };
 
@@ -28,7 +27,6 @@ export default function useStickerDrag({ boardRef, updatePlaced }) {
       { x: desired.x + MIN_DISTANCE_X, y: desired.y - MIN_DISTANCE_Y },
       { x: desired.x - MIN_DISTANCE_X, y: desired.y - MIN_DISTANCE_Y },
     ];
-
     return candidates.find((candidate) =>
       existing.every((item) => !isTooClose(candidate, item))
     ) ?? desired;
@@ -37,17 +35,13 @@ export default function useStickerDrag({ boardRef, updatePlaced }) {
   const addStickerAt = useCallback(
     (sticker, clientX, clientY) => {
       if (!sticker || !boardRef.current) return;
-
       const rect = boardRef.current.getBoundingClientRect();
-
       updatePlaced((prev) => {
         const desired = {
           x: Math.max(0, clientX - rect.left - 28),
           y: Math.max(0, clientY - rect.top - 28),
         };
-
         const free = findFreePosition(desired, prev);
-
         return [
           ...prev,
           {
@@ -63,16 +57,21 @@ export default function useStickerDrag({ boardRef, updatePlaced }) {
     [boardRef, updatePlaced]
   );
 
+  // ── Native drag (mouse / iPad mouse) ──────────────────────────────────────
   const onTrayDragStart = useCallback((e, sticker) => {
+    isDraggingNative.current = true;
     draggingFromTray.current = sticker;
     e.dataTransfer.effectAllowed = 'copy';
 
     const ghost = document.createElement('div');
     ghost.style.cssText = 'position:fixed;top:-999px;opacity:0;';
     document.body.appendChild(ghost);
-
     e.dataTransfer.setDragImage(ghost, 0, 0);
     setTimeout(() => document.body.removeChild(ghost), 0);
+  }, []);
+
+  const onTrayDragEnd = useCallback(() => {
+    isDraggingNative.current = false;
   }, []);
 
   const onBoardDrop = useCallback(
@@ -88,77 +87,63 @@ export default function useStickerDrag({ boardRef, updatePlaced }) {
     if (draggingFromTray.current) e.preventDefault();
   }, []);
 
-  const onTrayTouchStart = useCallback((e, sticker) => {
+  // ── Pointer drag (touch / stylus / Playwright iPhone emulation) ───────────
+  const onTrayPointerDown = useCallback((e, sticker) => {
+    // Let native drag handle mouse; pointer system handles touch + stylus
     e.preventDefault();
-    e.stopPropagation();
-
-    touchSticker.current = sticker;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    draggingFromTray.current = sticker;
 
     const ghost = document.createElement('div');
     ghost.className = 'sticker-ghost';
     ghost.textContent = sticker.emoji;
+    ghost.style.left = `${e.clientX - 28}px`;
+    ghost.style.top = `${e.clientY - 28}px`;
     document.body.appendChild(ghost);
-
-    touchGhost.current = ghost;
-
-    const t = e.touches[0];
-    ghost.style.left = `${t.clientX - 28}px`;
-    ghost.style.top = `${t.clientY - 28}px`;
+    pointerGhost.current = ghost;
   }, []);
 
-  const onTrayTouchMove = useCallback((e) => {
-    if (!touchGhost.current) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    const t = e.touches[0];
-    touchGhost.current.style.left = `${t.clientX - 28}px`;
-    touchGhost.current.style.top = `${t.clientY - 28}px`;
+  const onTrayPointerMove = useCallback((e) => {
+    if (isDraggingNative.current || !pointerGhost.current) return;
+    pointerGhost.current.style.left = `${e.clientX - 28}px`;
+    pointerGhost.current.style.top = `${e.clientY - 28}px`;
   }, []);
 
-  const onTrayTouchEnd = useCallback(
+  const onTrayPointerUp = useCallback(
     (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+      if (isDraggingNative.current) return;
 
-      const sticker = touchSticker.current;
-      const ghost = touchGhost.current;
+      const sticker = draggingFromTray.current;
+      const ghost = pointerGhost.current;
 
       if (ghost) document.body.removeChild(ghost);
-
-      touchGhost.current = null;
-      touchSticker.current = null;
+      pointerGhost.current = null;
+      draggingFromTray.current = null;
 
       if (!sticker || !boardRef.current) return;
 
-      const t = e.changedTouches[0];
       const rect = boardRef.current.getBoundingClientRect();
-
       const inside =
-        t.clientX >= rect.left &&
-        t.clientX <= rect.right &&
-        t.clientY >= rect.top &&
-        t.clientY <= rect.bottom;
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom;
 
-      if (inside) {
-        addStickerAt(sticker, t.clientX, t.clientY);
-      }
+      if (inside) addStickerAt(sticker, e.clientX, e.clientY);
     },
     [addStickerAt, boardRef]
   );
 
+  // ── Already-placed sticker drag ───────────────────────────────────────────
   const onPlacedPointerDown = useCallback((e, uid) => {
     if (e.target.classList.contains('sticker-value')) return;
     if (e.target.closest('.placed-sticker__delete')) return;
 
     e.preventDefault();
     e.stopPropagation();
-
     e.currentTarget.setPointerCapture(e.pointerId);
 
     const rect = e.currentTarget.getBoundingClientRect();
-
     draggingPlaced.current = {
       uid,
       offsetX: e.clientX - rect.left,
@@ -172,24 +157,16 @@ export default function useStickerDrag({ boardRef, updatePlaced }) {
       if (!dragging || !boardRef.current) return;
 
       const rect = boardRef.current.getBoundingClientRect();
-
       updatePlaced((prev) =>
         prev.map((p) => {
           if (p.uid !== dragging.uid) return p;
-
           const desired = {
             x: Math.max(0, e.clientX - rect.left - dragging.offsetX),
             y: Math.max(0, e.clientY - rect.top - dragging.offsetY),
           };
-
           const others = prev.filter((item) => item.uid !== dragging.uid);
           const free = findFreePosition(desired, others);
-
-          return {
-            ...p,
-            x: free.x,
-            y: free.y,
-          };
+          return { ...p, x: free.x, y: free.y };
         })
       );
     },
@@ -202,11 +179,12 @@ export default function useStickerDrag({ boardRef, updatePlaced }) {
 
   return {
     onTrayDragStart,
+    onTrayDragEnd,
     onBoardDrop,
     onBoardDragOver,
-    onTrayTouchStart,
-    onTrayTouchMove,
-    onTrayTouchEnd,
+    onTrayPointerDown,
+    onTrayPointerMove,
+    onTrayPointerUp,
     onPlacedPointerDown,
     onBoardPointerMove,
     onBoardPointerUp,

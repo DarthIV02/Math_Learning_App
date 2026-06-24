@@ -50,20 +50,14 @@ VALUES
 
 INSERT INTO operation_counts (
   num_operations,
-  grade,
   description,
   difficulty_label,
   score
 )
 VALUES
--- Grade 3
-(1, 3, 'Single operation problem.', 'easy', 1),
-(2, 3, 'Two simple operations.', 'hard', 3),
-
--- Grade 4
-(1, 4, 'Single operation problem.', 'easy', 1),
-(2, 4, 'Two simple operations.', 'medium', 2),
-(3, 4, 'Three simple operations.', 'hard', 3);
+(1, 'Single operation problem.', 'easy', 1),
+(2, 'Two simple operations.', 'medium', 2),
+(3, 'Three simple operations.', 'hard', 3);
 
 INSERT INTO operation_category_operations (operation_category_id, operation_id)
 VALUES
@@ -140,8 +134,7 @@ SELECT
   ) AS total_score
 
 FROM number_ranges nr
-JOIN operation_counts oc
-  ON oc.grade = nr.grade
+CROSS JOIN operation_counts oc
 CROSS JOIN operation_categories ot
 CROSS JOIN unknown_positions up
 CROSS JOIN linguistic_complexities lc
@@ -161,6 +154,14 @@ WHERE NOT (
 AND NOT (
   lc.name = 'two_short_sentences'
   AND cd.name = 'tracking_relational_dependencies'
+) AND NOT ( 
+  -- We dont want 3rd grade students with hard multiplications
+  ot.name = 'multiplication_division' AND 
+  nr.name IN ('100-500', '500-1000')
+) AND NOT (
+  -- Doesn't make sense to have 2 operations but only 1 operation map?
+  ot.name = 'mixed_operations'
+  AND cd.name = 'direct_operation_mapping'
 );
 
 INSERT INTO problems (
@@ -195,7 +196,7 @@ VALUES (
   1, -- result_unknown
   2, -- two_short_sentences
   3, -- constructing_hidden_quantities
-  4, -- operation_count_id
+  3, -- operation_count_id
   14,
   'medium'
 ),
@@ -215,7 +216,7 @@ VALUES (
   4, -- linguistic_complexity_id (longer_irrelevant_text)
   2, -- cognitive_demand_id (sequential_planning)
 
-  4, -- operation_count_id
+  3, -- operation_count_id
   14,
   'medium'
 ),
@@ -257,7 +258,7 @@ VALUES (
   2,
   2,
 
-  4,
+  2,
   10,
   'medium'
 ),
@@ -299,7 +300,7 @@ VALUES (
   3,
   5, -- relational dependencies
 
-  4,
+  2,
   15,
   'hard'
 ),

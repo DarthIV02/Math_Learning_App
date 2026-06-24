@@ -9,6 +9,8 @@ import TutorialOverlay from './components/Tutorial/TutorialOverlay';
 import { updateUser, fetchCurrentUser } from './api/users';
 import { fetchProblems } from './api/problem';
 
+import { useGenerationPolling } from './hooks/useGenerationPolling';
+
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
@@ -83,6 +85,21 @@ function App() {
       }, 500);
     }
   }, [isLoggedIn, user]);
+
+  const setProblems = useCallback((updater) => {
+    setPageState((prev) => ({
+      ...prev,
+      problems:
+        typeof updater === 'function'
+          ? updater(prev.problems ?? [])
+          : updater,
+    }));
+  }, []);
+
+  useGenerationPolling({
+    problems: pageState.problems ?? [],
+    setProblems,
+  });
 
   const handleAuthSuccess = (result) => {
     const rawUser = result.user || result;

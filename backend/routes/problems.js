@@ -26,9 +26,23 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
+router.get('/generation-status', authMiddleware, async (req, res) => {
+  try {
+    const { requestId } = req.query;
+    if (!requestId) {
+      return res.status(400).json({ error: 'requestId is required' });
+    }
+
+    const status = await problemService.getGenerationStatus(requestId, req.user.id);
+    res.json(status);
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
-    const problem = await problemService.getProblem(req.params.id, req.query.include_tips === 'true');
+    const problem = await problemService.getProblemsByIds([req.params.id], req.query.include_tips === 'true');
     res.json(problem);
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });

@@ -136,9 +136,10 @@ export default function Whiteboard({
         <StickerTray
           stickers={stickers}
           onTrayDragStart={dragHandlers.onTrayDragStart}
-          onTrayTouchStart={dragHandlers.onTrayTouchStart}
-          onTrayTouchMove={dragHandlers.onTrayTouchMove}
-          onTrayTouchEnd={dragHandlers.onTrayTouchEnd}
+          onTrayDragEnd={dragHandlers.onTrayDragEnd}
+          onTrayPointerDown={dragHandlers.onTrayPointerDown}
+          onTrayPointerMove={dragHandlers.onTrayPointerMove}
+          onTrayPointerUp={dragHandlers.onTrayPointerUp}
         />
       )}
 

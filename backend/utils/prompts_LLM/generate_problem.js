@@ -1,615 +1,396 @@
-function buildUnknownPositionRules(positionName) {
-  switch (positionName) {
-    case 'result_unknown':
+// backend/utils/prompts_LLM/generate_problem_text_prompt.js
+
+function buildLinguisticComplexityRules(linguistic_complexity) {
+  switch (linguistic_complexity) {
+    case "simple_direct_sentence":
       return `
-- The unknown is the final result.
-- Equation form: a OP b = ?
-- The question asks for the final amount.
-- Example question style: "Wie viele ... sind es insgesamt?" or "Wie viel ... bleibt übrig?"
+- Write a compact but natural problem.
+- Use one short context sentence to explain what is happening.
+- Then use one clear sentence that contains all relevant mathematical quantities.
+- Keep the relationship direct and easy to see.
+- Do not include irrelevant information.
+- Do not include equations or intermediate results in the text.
+- Do not write phrases like "also insgesamt 5 × 12 = 60".
 `;
 
-    case 'change_unknown':
+    case "two_short_sentences":
       return `
-- The unknown is a missing change or missing middle quantity.
-- Equation form: a OP ? = c
-- The question asks what was added, removed, missing, shared, or changed.
-- Example question style: "Wie viele ... fehlen noch?" or "Wie viele ... kamen dazu?"
+- Write a compact but natural problem.
+- Use two short story sentences before the question.
+- Split the relevant mathematical information across the two sentences.
+- The pupil should combine information from both sentences to solve the problem.
+- Keep the relationship between the quantities obvious.
+- Do not include irrelevant information.
+- Do not include equations or intermediate results in the text.
 `;
 
-    case 'start_unknown':
+    case "clear_relationship":
       return `
-- The unknown is the starting quantity.
-- Equation form: ? OP b = c
-- The question asks what existed at the beginning.
-- Example question style: "Wie viele ... hatte ... am Anfang?" or "Mit wie viel ... ist ... gestartet?"
+- Write a clear story where the relationship between quantities must be understood from the wording.
+- The relevant quantities may appear across two or three sentences.
+- Do not make the operation as direct as a simple "gets more" or "takes away" sentence.
+- Keep the story understandable for the grade level.
+- Do not include equations or intermediate results in the text.
+`;
+
+    case "longer_irrelevant_text":
+      return `
+- Write a slightly longer story before the question.
+- Include one or two realistic details that are not needed for solving.
+- The relevant mathematical information should still be easy to find.
+- The pupil should identify which information is needed and which is extra.
+- Do not include equations or intermediate results in the text.
 `;
 
     default:
       return `
-- Use a natural unknown position.
-- Make sure the equation and question ask for the same missing quantity.
+- Write a clear and age-appropriate problem.
+- Make sure all needed quantities appear naturally in the text.
+- Do not include equations or intermediate results in the text.
 `;
   }
 }
 
-function buildLinguisticComplexityRules(complexityName) {
-  switch (complexityName) {
-    case 'simple_direct_sentence':
+function buildCognitiveDemandRules(cognitive_demand) {
+  switch (cognitive_demand) {
+
+    case "direct_operation_mapping":
       return `
-- Use exactly ONE short, direct sentence.
-- Use simple subject-verb-object structure.
-- No subordinate clauses.
-- No irrelevant information.
+- The problem should require one direct operation.
+- All quantities should be stated explicitly.
+- The required operation should be immediately recognizable.
+- Avoid hidden quantities.
+- Avoid nested structures.
+- Avoid dependency chains between quantities.
 `;
 
-    case 'two_short_sentences':
+    case "sequential_planning":
       return `
-- Use exactly TWO short sentences.
-- First sentence gives the situation.
-- Second sentence asks the question.
-- No subordinate clauses.
-- No irrelevant information.
+- The problem should require two or more operations.
+- The events should happen in a clear chronological order.
+- Each operation should naturally follow from the previous one.
+- The pupil should solve the problem step by step.
+- Avoid hidden quantities.
 `;
 
-    case 'clear_relationship':
+    case "constructing_hidden_quantities":
       return `
-- Use 2–3 sentences.
-- A clear relationship between quantities is allowed.
-- One simple subordinate clause is allowed.
-- No irrelevant information.
+- The problem should require constructing an intermediate quantity before answering the final question.
+- The intermediate quantity should not be directly stated.
+- The pupil must first combine or derive information before solving the actual question.
+- The hidden quantity should be naturally embedded in the story.
 `;
 
-    case 'longer_irrelevant_text':
+    case "managing_hierarchical_structure":
       return `
-- Use 3–4 sentences.
-- Include at least ONE irrelevant detail that is not needed to solve the problem.
-- The irrelevant detail must be plausible but mathematically unnecessary.
-- The problem must still be clear and solvable.
+- The problem should contain quantities nested inside other quantities.
+- Use clear hierarchical structures such as:
+  - shelves containing boxes
+  - boxes containing items
+  - teams containing children
+  - bags containing objects
+  - rows containing seats
+- The hierarchy should be necessary for solving the problem.
+`;
+
+    case "tracking_relational_dependencies":
+      return `
+- At least one quantity should be defined through another quantity.
+- Use relationships such as:
+  - more than
+  - fewer than
+  - twice as many
+  - half as many
+  - a multiple of
+- The pupil must track these relationships to determine the required quantities.
+- The dependency chain should remain understandable for the grade level.
 `;
 
     default:
       return `
-- Use clear, child-friendly German.
-- Keep the wording appropriate for the grade.
+- Match the intended reasoning difficulty.
 `;
   }
 }
 
-function buildCognitiveDemandRules(demandName) {
-  switch (demandName) {
-    case 'direct_operation_mapping':
-      return `
-- The text maps directly to one operation.
-- No hidden intermediate quantity.
-- No nested grouping.
-- No relational dependency chain.
-- The result must also be different from both operands. This ensures the student must actually perform the operation, not just recognize it as a pattern.
-`;
-
-    case 'sequential_planning':
-      return `
-- The student must solve steps in a clear forward order.
-- The order of actions should be visible in the story.
-- Example structure: first something changes, then another change happens.
-`;
-
-    case 'constructing_hidden_quantities':
-      return `
-- The student must derive an intermediate quantity that is not directly stated.
-- The intermediate quantity is required before answering the final question.
-- Example: A child has some items, gives some away, and then the remaining items are shared equally.
-`;
-
-    case 'managing_hierarchical_structure':
-      return `
-- The problem must contain groups inside groups.
-- Example: shelves contain boxes, boxes contain objects.
-- The student must track the nested structure before solving.
-`;
-
-    case 'tracking_relational_dependencies':
-      return `
-- At least one quantity must be defined relative to another quantity.
-- The student must resolve the dependency chain.
-- Example: "Lena hat doppelt so viele wie Max. Max hat 8 weniger als Sara."
-`;
-
-    default:
-      return `
-- The reasoning structure must match the active cognitive demand.
-`;
-  }
-}
-
-function buildOperationCountRules(operationCount) {
-  const count = Number(operationCount);
-
-  if (count === 1) {
+function buildGradeLanguageRules(grade) {
+  if (Number(grade) === 3) {
     return `
-- Use exactly ONE arithmetic operator.
-- The problem should be single-step.
+- Write for German Grade 3 pupils.
+- Use short, familiar words where possible.
+- Avoid overly long sentences.
+- Avoid complex subordinate clauses.
+- The problem should be solvable with Grade 3 knowledge.
 `;
   }
 
-  if (count === 2) {
+  if (Number(grade) === 4) {
     return `
-- Use exactly TWO arithmetic operators.
-- The problem should require two simple steps.
-- Use parentheses if needed.
-`;
-  }
-
-  if (count === 3) {
-    return `
-- Use exactly THREE arithmetic operators.
-- The problem should require three connected steps.
-- Use parentheses if needed.
+- Write for German Grade 4 pupils.
+- Slightly longer sentences are allowed.
+- Multi-step situations are allowed.
+- The problem should still be concrete and child-friendly.
 `;
   }
 
   return `
-- Use exactly ${count} arithmetic operators.
-- The equation must be unambiguous.
-- Use parentheses if needed.
+- Write for German primary-school pupils.
 `;
 }
 
-function buildGradeRules(grade) {
-  const g = Number(grade);
-
-  if (g === 3) {
+function buildGradeMathRules(grade) {
+  if (Number(grade) === 3) {
     return `
-- Use mental-math friendly calculations.
-- Multiplication should stay within basic times tables when possible.
-- Division should divide cleanly unless the scenario explicitly needs a remainder.
-- Use short, simple German.
-- Use one measurement unit per problem.
-- Avoid percentages, taxes, physics, investments, and abstract finance.
+============================
+GRADE 3 MULTIPLICATION AND DIVISION RULES
+============================
+
+- If the problem uses multiplication, both factors must be between 2 and 10.
+- Allowed multiplication facts are only from 2 × 2 up to 10 × 10.
+- Do not create Grade 3 multiplication such as 12 × 4, 15 × 6, or 130 × 4.
+- If the problem uses division, it must correspond to an allowed multiplication fact.
+- Examples:
+  - 24 ÷ 6 is allowed because 6 × 4 = 24.
+  - 72 ÷ 9 is allowed because 9 × 8 = 72.
+  - 120 ÷ 10 is not allowed for Grade 3 if it requires 12 × 10.
+- Large values may appear in addition/subtraction, but not as multiplication factors.
 `;
   }
 
-  if (g === 4) {
-    return `
-- Multi-digit written calculation is allowed.
-- Multiplication and division can go beyond basic times tables.
-- Unit conversions are allowed if the theme supports them.
-- Use child-friendly but slightly richer German.
-- Contexts may include school trips, sports tournaments, baking, markets, gardens, libraries, and hobbies.
-`;
-  }
-
-  return `
-- Keep the problem age-appropriate and mathematically correct.
-`;
+  return "";
 }
 
-function buildOperationTypeRules(operation, operationType) {
-  if (operation != null) {
-      return `Primary operation:
-${operation}`;
-  }
-  // operation is null
-  if (operationType === 'addition_subtraction') {
-      return `Only use these operations:
-Addition and Subtraction`;
-  } else if (operationType === 'division_multiplication') {
-    return `Only use these operations:
-Division or Multiplication`;
-  } else if (operationType === 'mixed_operations') {
-    return `Primary operations:
-For num_simple_operations = 1: use addition, subtraction, multiplication, or division.
-For num_simple_operations > 1: use a mix of addition/subtraction AND multiplication/division. Avoid using only addition and subtraction or only multiplication and division.`;
-  }
-}
-
-function buildThemeRules(theme) {
-  
-  const themeMap = {
-    "geld": "Money",
-    "gewichte": "Weights",
-    "längen": "Distances",
-    "other": "Other",
-  };
-
-  if (!theme || theme === "other") {
-    return `
-Theme:
-- No fixed theme is required.
-- Choose any child-friendly real-world context.
-- Prefer diverse everyday situations such as school, sports, hobbies, animals, baking, libraries, gardens, or markets.
-`;
-  }
-
-  return `
-Theme:
-- The problem MUST use the theme "${themeMap[theme]}".
-- The context, objects, and wording should naturally fit this theme.
-`;
-}
-
-function buildNarrativeOrderRules(operation, operationType, quantity) {
-  const usesNonCommutative =
-    operation === 'division' ||
-    operation === 'subtraction' ||
-    operationType === 'division_multiplication' ||
-    operationType === 'addition_subtraction' ||
-    operationType === 'mixed_operations';
-
-  if (!usesNonCommutative) return '';
-
-  return `
-NARRATIVE ORDER (for division and subtraction):
-- The order in which numbers are MENTIONED IN THE STORY must vary across the batch.
-- Do NOT default to "character has X, splits into Y groups" for every division problem.
-- At least ~50% of division/subtraction problems in a batch of ${quantity} must introduce the
-  SECOND operand (divisor / subtrahend) FIRST in the story.
-
-Good examples for division (divisor-first narrative):
-- "In der Bäckerei gibt es 6 Tabletts. Auf ihnen sollen insgesamt 144 Brötchen verteilt werden. Wie viele Brötchen liegen auf jedem Tablett?"
-- "8 Kinder teilen sich gerecht 56 Gummibärchen. Wie viele bekommt jedes Kind?"
-- "In 12 Kisten werden 360 Äpfel gleichmäßig verpackt. Wie viele Äpfel sind in einer Kiste?"
-
-Good examples for subtraction (subtrahend-first narrative):
-- "27 Gäste sind schon gegangen. Am Anfang waren 80 Gäste da. Wie viele sind noch da?"
-
-The EQUATION itself is still dividend / divisor — but the STORY text introduces them in
-the opposite order. This is real diversity, not just relabeling 'a' and 'b'.
-`;
-}
-
-
-function buildDiversityRules(quantity, operationCount, unknownPosition, operation, operation_category) {
-  return `
-
-Generate exactly ${quantity} problem(s).
-
-Across the batch, enforce BOTH narrative diversity and structural diversity.
-
-Narrative diversity:
-- No repeated main character name.
-- No repeated location.
-- No repeated key object.
-- Mix scenario archetypes: school day, sports, baking, library, garden, market, hobby, animals, crafts.
-- Vary sentence structure. Do not start every problem with the character's name.
-- Vary numeric style. Do not make all operands end in 0.
-
-Structural diversity:
-- Each problem must include planned_equation_template in scenario_plan.
-- planned_equation_template must be structurally distinct from sibling problems.
-- Changing only numbers does NOT count as structural diversity.
-- Structural diversity means at least one of:
-  - different operator order,
-  - different parenthesization,
-  - different unknown placement,
-  - different equation shape.
-
-Failure example:
-Problem 1: 468 - 8 * ? = 100
-Problem 2: 374 - 6 * ? = 140
-Problem 3: 401 - 7 * ? = 184
-
-These are NOT diverse. They are the same template with different numbers.
-
-For num_simple_operations = ${operationCount}:
-${buildTemplateExamples(operationCount, unknownPosition)}
-
-If two problems have the same template shape, revise one before returning JSON.
-
-${buildNarrativeOrderRules(operation, operation_category, quantity)}
-`;
-}
-
-function buildTemplateExamples(operationCount, unknownPosition) {
-  const count = Number(operationCount);
-
-  if (count === 1) {
-    return `
-Examples (treat operand order as STRUCTURAL diversity for non-commutative ops):
-- a + b = ?
-- a - b = ?           // subtrahend second
-- a * b = ?
-- a / b = ?           // dividend first
-- b / a = ?           // dividend second — DIFFERENT structure from a / b
-- ? + b = c
-- a + ? = c
-- ? * b = c
-- a * ? = c
-- a / ? = c           // unknown divisor
-- ? / b = c           // unknown dividend
-
-IMPORTANT for division and subtraction:
-- "a / b" and "b / a" are STRUCTURALLY DIFFERENT templates.
-- "a - b" and "b - a" are STRUCTURALLY DIFFERENT templates.
-- When generating multiple division problems, vary which operand serves as the dividend.
-- The dividend does not have to be the first number mentioned in the story.
-  `;
-  }
-
-  if (count === 2) {
-    return `
-Examples:
-- (a + b) * c = ?
-- a * b + c = ?
-- (a - b) / c = ?
-- a + b * ? = c
-- (? + a) * b = c
-- ? - a * b = c
-- a * b - ? = c
-`;
-  }
-
-  if (count === 3) {
-    return `
-Examples:
-- (a + b) * c - d = ?
-- a * b + c / d = ?
-- (a - b) + c * d = ?
-- a * b - c + ? = d
-- (? + a) * b - c = d
-`;
-  }
-
-  return `
-Examples:
-- (a + b) * c - d / e = ?
-- a * b + c - d * e = ?
-- (a - b) * (c + d) / ? = e
-`;
-}
-
-function generateMathProblemPrompt({
-  operation,
-  theme,
+function generateProblemTextPrompt({
+  quantity_relationship_plans,
   grade,
-  difficulty_label,
+  theme,
   quantity,
-  number_range_min_value,
-  number_range_max_value,
-  operation_category,
-  unknown_position,
   linguistic_complexity,
-  linguistic_complexity_description,
-  cognitive_demand,
-  cognitive_demand_description,
-  num_simple_operations
+  cognitive_demand
 }) {
-
   const system_prompt = `
-You are an expert German primary school math teacher.
+You are writing German primary-school math word problems.
 
-You generate mathematically correct, pedagogically appropriate German word problems ("Textaufgaben") for primary school students.
+You receive structured situation plans with:
+- a scenario summary
+- given quantities
+- a target quantity
+- a relationship description
+- a possible operation structure
+
+Your task is to write the final natural-language math task.
 
 Return ONLY valid JSON matching the schema.
 
 ============================
-ACTIVE PROFILE
+IMPORTANT PRINCIPLE
 ============================
 
-Grade:
-${grade}. Klasse
+Write the final task text, but do NOT solve it.
 
-${buildOperationTypeRules(operation, operation_category)}
+Do NOT include:
+- the solution
+- an equation
+- calculation steps
+- hints
+- answer explanations
 
-Operation count:
-${num_simple_operations}
+The output should sound like a natural German primary-school textbook problem.
 
-Number range:
-${number_range_min_value} to ${number_range_max_value}
+IMPORTANT PARAMETER MEANING
 
-Unknown position:
-${unknown_position}
-
-Linguistic complexity:
-${linguistic_complexity}
-${linguistic_complexity_description}
-
-Cognitive demand:
-${cognitive_demand}
-${cognitive_demand_description}
-
-${buildThemeRules(theme)}
-
-Quantity:
-${quantity}
-
-Trust these parameters completely.
-The caller has already validated that this combination is pedagogically appropriate.
+- quantity means the number of problems to return.
+- quantity does NOT mean the number of numbers, values, objects, quantities, or givens inside each problem.
+- Do not add extra numbers just to satisfy quantity.
+- The number of numerical values inside a problem is controlled only by the mathematical structure, operation_count, and cognitive_demand.
 
 ============================
-GRADE CAPABILITIES
+ACTIVE PARAMETERS
 ============================
 
-${buildGradeRules(grade)}
+Grade: ${grade}
+Theme: ${theme || "none"}
+Quantity: ${quantity}
+Linguistic complexity: ${linguistic_complexity}
+Cognitive demand: ${cognitive_demand}
 
 ============================
-ACTIVE CONSTRAINTS
+LINGUISTIC COMPLEXITY RULES
 ============================
 
-PRIMARY OPERATION:
-- The equation must contain "${operation ? operation : operation_category}" at least once." at least once.
-
-OPERATION COUNT:
-${buildOperationCountRules(num_simple_operations)}
-
-NUMBER RANGE:
-- Every operand and final answer must stay within:
-  ${number_range_min_value} to ${number_range_max_value}
-
-NUMBER SELECTION RULES:
-- Do NOT use the minimum value (${number_range_min_value}) or the maximum value (${number_range_max_value}) as operands more than once across the entire batch.
-- Do NOT reuse the same operand pair across problems (e.g. once you use 500 + 500, do not use it again).
-- Across the batch of ${quantity} problems, the operands must SPREAD across the full range [${number_range_min_value}, ${number_range_max_value}], not cluster at the endpoints.
-- For addition: vary the magnitudes of the two addends. Do NOT make both addends equal.
-- For subtraction: the difference (result) must also fall within [${number_range_min_value}, ${number_range_max_value}]. Vary how close the subtrahend is to the minuend across problems.
-
-UNKNOWN POSITION:
-${buildUnknownPositionRules(unknown_position)}
-
-LINGUISTIC COMPLEXITY:
 ${buildLinguisticComplexityRules(linguistic_complexity)}
 
-COGNITIVE DEMAND:
+============================
+COGNITIVE DEMAND RULES
+============================
+
 ${buildCognitiveDemandRules(cognitive_demand)}
 
 ============================
-DIVERSITY RULES
+GRADE LANGUAGE RULES
 ============================
 
-${buildDiversityRules(quantity, num_simple_operations, unknown_position, operation, operation_category)}
+${buildGradeLanguageRules(grade)}
+
+${buildGradeMathRules(grade)}
 
 ============================
-PROCESS
+NUMBER AND UNIT RULES
 ============================
 
-For EACH problem:
-1. Create a scenario_plan.
-2. Choose operands respecting the NUMBER SELECTION RULES above.
-3. Create an equation with exactly ${num_simple_operations} operators.
-4. Place the unknown according to ${unknown_position}.
-5. Write the German word problem.
-6. Verify mathematical correctness.
-7. Verify SEMANTIC correctness:
-   - The story must describe a plausible real-world situation.
-   - The arithmetic in the story must match the equation.
-   - The question must be answerable from ONLY the numbers given in the story.
-   - The answer must make sense in context (e.g. a person does not "pay 1000 € for bread").
-   - If the story does not pass this check, rewrite it before returning JSON.
+- Use display_value in the visible task text.
+- Do not expose the internal integer value if display_value is different.
+- Example: if value is 511 and display_value is "€5.11", write "€5.11", not "511 Cent", unless cents are more natural.
+- Keep units consistent.
+- Use German decimal commas for money if appropriate, e.g. "5,11 €" or "€5,11".
+- Prefer natural German textbook notation, e.g. "5,11 €", "180 m", "750 g".
 
 ============================
-IMPORTANT
+QUESTION RULES
 ============================
 
-- question_text must NOT contain the equation.
-- Problems must sound natural in German.
-- The unknown symbol is ALWAYS "?". Never write "null", "x", "_", or leave it blank.
-- Return ONLY valid JSON.
+- End with exactly one question.
+- The question must ask for the target quantity.
+- The question must be answerable from the given information.
+- Do not ask multiple questions.
+- Do not reveal the operation in the question too directly if the cognitive demand is medium or hard.
+
+============================
+OUTPUT REQUIREMENTS
+============================
+
+For each input plan, return:
+- task_text
+- final_question
+- full_problem_text
+- used_quantities
+- linguistic_complexity_applied
+- cognitive_demand_applied
 `;
 
-  user_prompt = `
-Generate ${ quantity } German math word problems for a ${ grade }. Klasse student with these parameters:
+  const user_prompt = `
+Write final German math word problems from these quantity relationship plans.
 
-${operation ? `- Primary operation: ${ operation }` : `- Primary operations: ${ operation_category }`}
-- Operation count: ${ num_simple_operations }
-- Number range: (${ number_range_min_value }–${ number_range_max_value })
-- Unknown position: ${ unknown_position }
-- Linguistic complexity: ${ linguistic_complexity }
-- Cognitive demand: ${ cognitive_demand }
-- Theme: ${theme ? `${theme}` : 'any natural child-friendly context'}
+Parameters:
+${JSON.stringify(
+  {
+    grade,
+    theme,
+    quantity,
+    linguistic_complexity,
+    cognitive_demand
+  },
+  null,
+  2
+)}
 
-Follow the process: plan first in scenario_plan (including a DISTINCT planned_equation_template for each problem), then compose, then verify. Do not produce multiple problems that share the same equation shape with different numbers.
-  `;
+Quantity relationship plans:
+${JSON.stringify(quantity_relationship_plans, null, 2)}
+`;
 
-  return_format = {
-        type: "json_schema",
-        json_schema: {
-        name: "math_problem_generation",
-        schema: {
-            type: "object",
-            properties: {
-            scenario_plan: {
-                type: "array",
-                items: {
-                type: "object",
-                required: [
-                    "context",
-                    "main_character",
-                    "location",
-                    "key_object",
-                    "planned_operations",
-                    "planned_operands",
-                    "planned_unknown_position",
-                    "planned_intermediate_quantities",
-                    "planned_equation_template",
-                    "equation"
-                ],
-                additionalProperties: false,
-                properties: {
-                    context: { type: "string" },
-                    main_character: { type: "string" },
-                    location: { type: "string" },
-                    key_object: { type: "string" },
-                    planned_operation: {
-                      type: "array",
-                      description: "The arithmetic operators used in the equation, in order. Length MUST equal num_simple_operations. MUST include primary_operation at least once.",
-                      items: {
+  const return_format = {
+    type: "json_schema",
+    json_schema: {
+      name: "problem_text_generation",
+      strict: true,
+      schema: {
+        type: "object",
+        additionalProperties: false,
+        required: ["problems"],
+        properties: {
+          problems: {
+            type: "array",
+            minItems: Number(quantity),
+            maxItems: Number(quantity),
+            items: {
+              type: "object",
+              additionalProperties: false,
+              required: [
+                "task_text",
+                "final_question",
+                "full_problem_text",
+                "used_quantities",
+                "linguistic_complexity_applied",
+                "cognitive_demand_applied"
+              ],
+              properties: {
+                task_text: {
+                  type: "string",
+                  description:
+                    "The story part of the word problem without the final question."
+                },
+                final_question: {
+                  type: "string",
+                  description:
+                    "Exactly one final question asking for the target quantity."
+                },
+                full_problem_text: {
+                  type: "string",
+                  description:
+                    "The complete problem text: task_text plus final_question."
+                },
+                used_quantities: {
+                  type: "array",
+                  minItems: 1,
+                  items: {
+                    type: "object",
+                    additionalProperties: false,
+                    required: [
+                      "value",
+                      "display_value",
+                      "base_unit",
+                      "display_unit",
+                      "object"
+                    ],
+                    properties: {
+                      value: {
+                        type: "integer",
+                        description:
+                          "The underlying integer value used for calculation."
+                      },
+                      display_value: {
                         type: "string"
                       },
-                      enum: ["addition", "substraction", "division", "multiplication"]
-                    },
-
-                    planned_operands: {
-                    type: "array",
-                    items: {
-                        type: "number"
-                    },
-                    description: "Numeric operands used in the equation. All operands AND the final answer must fall within [number_range_min, number_range_max]. At least one operand in the upper half of the range."
-                    },
-
-                    planned_unknown_position: {
-                    type: "string",
-                    enum: ["result", "middle", "start"]
-                    },
-
-                    planned_intermediate_quantities: {
-                    type: "array",
-                    items: {
+                      base_unit: {
                         type: "string"
-                    },
-                    description: "For cognitive demands that require derivation, list each intermediate quantity. Otherwise empty array."
-                    },
-                    
-                    planned_equation_template: {
-                      type: "string",
-                      description: "Abstract equation structure using letters a, b, c, d for operands and the literal character '?' for the unknown. NEVER use 'null'. Examples: 'a + b = ?', 'a - b * ? = c'. MUST be distinct from sibling problems' templates."
-                    },
-                    equation: {
-                      type: "string",
-                      description: "The math equation using exactly the planned operands and planned operators. The unknown MUST be written as the literal character '?'. NEVER write 'null'. Example: '527 + 643 = ?'. Use parentheses where order matters."
-                    },
-                }
-                }
-            },
-
-            problems: {
-                type: "array",
-                items: {
-                type: "object",
-                required: [
-                    "equation",
-                    "answer",
-                    "question_text"
-                ],
-                additionalProperties: false,
-                properties: {
-                    equation: {
-                    type: "string",
-                    description: "The math equation using exactly the planned operands and planned operators. Unknown written as ?. Use parentheses where order matters. Structure MUST match planned_equation_template."
-                    },
-
-                    answer: {
-                    type: "number"
-                    },
-
-                    question_text: {
-                    type: "string",
-                    description: "German word problem. Must match linguistic_complexity and cognitive_demand. Must ask for the named unknown. Must NOT contain the equation."
+                      },
+                      display_unit: {
+                        type: "string"
+                      },
+                      object: {
+                        type: "string"
+                      }
                     }
+                  }
+                },
+                linguistic_complexity_applied: {
+                  type: "string",
+                  enum: [
+                    "simple_direct_sentence",
+                    "two_short_sentences",
+                    "clear_relationship",
+                    "longer_irrelevant_text"
+                  ]
+                },
+                cognitive_demand_applied: {
+                  type: "string",
+                  enum: [
+                    "direct_operation_mapping",
+                    "sequential_planning",
+                    "constructing_hidden_quantities",
+                    "managing_hierarchical_structure",
+                    "tracking_relational_dependencies"
+                  ]
                 }
-                }
+              }
             }
-            },
-
-            required: [
-            "scenario_plan",
-            "problems"
-            ],
-
-            additionalProperties: false
           }
         }
-    };
+      }
+    }
+  };
 
-    return {system_prompt, user_prompt, return_format};
+  return { system_prompt, user_prompt, return_format };
 }
 
-module.exports = generateMathProblemPrompt;
+module.exports = generateProblemTextPrompt;

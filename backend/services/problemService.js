@@ -1,8 +1,11 @@
 const db = require('../db');
 const aiService = require('./aiService');
+const {getIdByName, getNumberRangeId, getOperationCountId, getOperationIds} = require('../utils/get_db')
 
-async function getProblem(id, includeTips = false) {
-  const result = await db.query(
+async function getProblemsByIds(ids, includeTips = false) {
+  if (!ids.length) return [];
+
+  const { rows } = await db.query(
     `
     SELECT
       p.id,
@@ -10,10 +13,9 @@ async function getProblem(id, includeTips = false) {
       p.subject_object,
       p.emojis,
       p.colors,
-
       p.grade,
 
-      p.num_simple_operations,
+      oc.num_operations AS num_simple_operations,
       p.total_difficulty_score,
       p.difficulty_label,
 
@@ -73,13 +75,16 @@ async function getProblem(id, includeTips = false) {
     LEFT JOIN cognitive_demands cd
       ON cd.id = p.cognitive_demand_id
 
+    LEFT JOIN operation_counts oc
+      ON oc.id = p.operation_count_id
+
     LEFT JOIN problem_operations po
       ON po.problem_id = p.id
 
     LEFT JOIN operations o
       ON o.id = po.operation_id
 
-    WHERE p.id = $1
+    WHERE p.id = ANY($1::int[])
 
     GROUP BY
       p.id,
@@ -88,18 +93,17 @@ async function getProblem(id, includeTips = false) {
       ot.id,
       up.id,
       lc.id,
-      cd.id
+      cd.id,
+      oc.id
     `,
-    [id]
+    [ids]
   );
 
-  if (!result.rows.length) {
-    const err = new Error('Problem not found');
-    err.status = 404;
-    throw err;
-  }
+  const byId = new Map(rows.map(row => [row.id, row]));
 
-  return result.rows[0];
+  return ids
+    .map(id => byId.get(Number(id)))
+    .filter(Boolean);
 }
 
 async function listProblems({
@@ -255,22 +259,77 @@ async function listProblems({
   );
 
   if (result.rows.length < limit) {
+    const missing = limit - result.rows.length;
+
+    let num_attrs;
+    if (missing > 3) {
+      num_attrs = 3;
+    } else {
+      num_attrs = missing;
+    }
+
     const attrs = await generate_attrs_based_difficulty({
       grade,
       difficulty_label,
       operation: operation || null,
+      num_attrs: num_attrs, // 1, 2 or 3
     });
 
-    const created = await createProblem({
-      operation: operation ?? null,
-      theme: theme ?? null,
-      grade,
-      difficulty_label,
-      quantity: limit - result.rows.length,
-      attrs,
-    });
+    generationRequests = [];
 
-    // result.rows = result.rows.concat(created);
+    const requestQuantities = attrs.map((_, i) =>
+      Math.floor(missing / attrs.length) + (i < missing % attrs.length ? 1 : 0)
+    );
+
+    for (const [i, attr] of attrs.entries()) {
+      // Create a dedicated job for this batch
+      const { rows: [generationRequest] } = await db.query(
+        `
+        INSERT INTO generation_requests (user_id, status, quantity)
+        VALUES ($1, 'pending', $2)
+        RETURNING id
+        `,
+        [user_id, requestQuantities[i]]
+      );
+      
+      generationRequests.push(generationRequest.id);
+      
+      const current_request = generationRequest.id;
+
+      // Fire and forget
+      createProblem({
+        operation: operation ?? null,
+        theme: theme ?? null,
+        grade: grade,
+        difficulty_label: difficulty_label,
+        quantity: requestQuantities[i],
+        attrs: attr,
+        generationRequestId: current_request,
+      }).catch(err => {
+        console.error("Background problem creation failed:", err);
+        db.query(
+          `UPDATE generation_requests SET status = 'failed', error = $2, completed_at = now() WHERE id = $1`,
+          [current_request, String(err.message || err)]
+        ).catch(() => {});
+      });
+    }
+
+    const assignments = generationRequests.flatMap(
+      (id, i) => Array(Math.floor(missing / generationRequests.length) + (i < missing % generationRequests.length))
+        .fill(id)
+    );
+
+    const placeholders = generationRequests.flatMap((requestId, requestIdx) =>
+      Array.from({ length: requestQuantities[requestIdx] }, (_, localIndex) => ({
+        id: null,
+        is_placeholder: true,
+        status: "generating",
+        placeholder_index: localIndex,
+        generation_request_id: requestId,
+      }))
+    );
+
+    result.rows = result.rows.concat(placeholders);
   }
 
   return result.rows;
@@ -280,6 +339,7 @@ async function generate_attrs_based_difficulty({
   grade,
   difficulty_label,
   operation = null,
+  num_attrs = 1
 }) {
   let query = `
     SELECT
@@ -342,11 +402,11 @@ async function generate_attrs_based_difficulty({
 
   query += `
     ORDER BY RANDOM()
-    LIMIT 1
+    LIMIT ${num_attrs}
   `;
 
   const result = await db.query(query, params);
-  return result.rows[0];
+  return result.rows;
 }
 
 async function createProblem({
@@ -356,81 +416,177 @@ async function createProblem({
   difficulty_label,
   quantity,
   attrs = {},
+  generationRequestId = null,
 }) {
-  const generated = await aiService.call_openai_api("problem", {
+  const attrRows = Array.isArray(attrs) ? attrs : [attrs];
+  const insertedProblems = [];
+
+  const generated = await aiService.call_openai_api("problem", false, {
     operation,
     theme,
     grade,
-    quantity,
+    quantity: quantity,
     ...attrs,
   });
 
-  // !!! NEEDS TO BE UPDATED WITH NEW PROBLEM ATTRIBUTES AND MANY-TO-MANY WITH OPERATIONS !!!
+  for (let i = 0; i < quantity; i++) {
 
-  // const insertedProblems = [];
+    const questionText = generated[i];
 
-  // for (let i = 0; i < generated.problems.length; i++) {
-  //   const problem = generated.problems[i];
-  //   const plan = generated.scenario_plan[i];
+    const theme_id = await getIdByName("themes", theme, db);
+    const number_range_id = await getNumberRangeId(attrs.number_range, grade, db);
+    const operation_category_id = await getIdByName(
+      "operation_categories",
+      attrs.operation_category,
+      db
+    );
+    const unknown_position_id = await getIdByName(
+      "unknown_positions",
+      attrs.unknown_position,
+      db
+    );
+    const linguistic_complexity_id = await getIdByName(
+      "linguistic_complexities",
+      attrs.linguistic_complexity,
+      db
+    );
+    const cognitive_demand_id = await getIdByName(
+      "cognitive_demands",
+      attrs.cognitive_demand,
+      db
+    );
+    const operation_count_id = await getOperationCountId(
+      attrs.num_simple_operations,
+      db
+    );
 
-  //   const result = await db.query(
-  //     `
-  //     INSERT INTO problems
-  //       (
-  //         theme_id,
-  //         grade,
-  //         question_text,
-  //         difficulty_label,
-  //         number_range_id,
-  //         operation_category_id,
-  //         unknown_position_id,
-  //         linguistic_complexity_id,
-  //         cognitive_demand_id,
-  //         num_simple_operations,
-  //         total_difficulty_score,
-  //         correct_answers,
-  //         ai_full_return
-  //       )
-  //     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-  //     RETURNING *
-  //     `,
-  //     [
-  //       theme_id,
-  //       grade,
-  //       problem.question_text,
-  //       difficulty_label,
-  //       number_range_id,
-  //       operation_category_id,
-  //       unknown_position_id,
-  //       linguistic_complexity_id,
-  //       cognitive_demand_id,
-  //       num_simple_operations,
-  //       total_difficulty_score,
-  //       { answer: problem.answer },
-  //       {
-  //         problem,
-  //         scenario_plan: plan,
-  //       },
-  //     ]
-  //   );
+    const result = await db.query(
+      `
+      INSERT INTO problems (
+        theme_id,
+        grade,
+        question_text,
+        difficulty_label,
+        number_range_id,
+        operation_category_id,
+        unknown_position_id,
+        linguistic_complexity_id,
+        cognitive_demand_id,
+        operation_count_id,
+        total_difficulty_score,
+        correct_answers,
+        ai_full_return
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+      RETURNING *
+      `,
+      [
+        theme_id,
+        grade,
+        questionText,
+        difficulty_label,
+        number_range_id,
+        operation_category_id,
+        unknown_position_id,
+        linguistic_complexity_id,
+        cognitive_demand_id,
+        operation_count_id,
+        attrs.total_difficulty_score,
+        {}, // fill later need to parse/compute answers
+        {
+          // Missing log of AI --> Need to parse
+        },
+      ]
+    );
 
-  //   const insertedProblem = result.rows[0];
+    const insertedProblem = result.rows[0];
 
-  //   for (const operationId of operation_ids) {
-  //     await db.query(
-  //       `
-  //       INSERT INTO problem_operations (problem_id, operation_id)
-  //       VALUES ($1, $2)
-  //       ON CONFLICT DO NOTHING
-  //       `,
-  //       [insertedProblem.id, operationId]
-  //     );
-  //   }
+    // Need to compute operations from the equation
 
-  //   insertedProblems.push(insertedProblem);
-  // }
+    // for (const operationId of operation_ids) {
+    //   await db.query(
+    //     `
+    //     INSERT INTO problem_operations (problem_id, operation_id)
+    //     VALUES ($1, $2)
+    //     ON CONFLICT DO NOTHING
+    //     `,
+    //     [insertedProblem.id, operationId]
+    //   );
+    // }
 
-  // return insertedProblems;
+    if (generationRequestId) {
+      await db.query(
+        `
+        INSERT INTO generation_request_problems
+          (generation_request_id, placeholder_index, problem_id)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (generation_request_id, placeholder_index)
+        DO UPDATE SET problem_id = EXCLUDED.problem_id
+        `,
+        [generationRequestId, i, insertedProblem.id]
+      );
+    }
+
+    insertedProblems.push(insertedProblem);
+
+    if (generationRequestId) {
+      await db.query(
+        `UPDATE generation_requests SET status = 'completed', completed_at = now() WHERE id = $1`,
+        [generationRequestId]
+      );
+    }
+  }
+
+  console.log("Inserted NEW problems to db: ", insertedProblems.length)
+
+  return insertedProblems;
+}
+
+async function getGenerationStatus(generationRequestId, userId) {
+  const { rows: [job] } = await db.query(
+    `
+    SELECT id, status, quantity, error
+    FROM generation_requests
+    WHERE id = $1 AND user_id = $2
+    `,
+    [generationRequestId, userId]
+  );
+
+  if (!job) {
+    throw Object.assign(new Error('Generation request not found'), {
+      status: 404,
+    });
+  }
+
+  const { rows: links } = await db.query(
+    `
+    SELECT placeholder_index, problem_id
+    FROM generation_request_problems
+    WHERE generation_request_id = $1
+    ORDER BY placeholder_index
+    `,
+    [generationRequestId]
+  );
+
+  const problems = await getProblemsByIds(
+    links.map(link => link.problem_id)
+  );
+
+  const byId = new Map(problems.map(problem => [problem.id, problem]));
+
+  const ready = links
+    .map(link => ({
+      placeholder_index: link.placeholder_index,
+      problem: byId.get(link.problem_id),
+    }))
+    .filter(row => row.problem);
+
+  return {
+    status: job.status,
+    error: job.error,
+    quantity: job.quantity,
+    problems: ready,
+  };
 }
 
 async function updateProblem(id, {
@@ -541,4 +697,4 @@ async function deleteProblem(id) {
   return result.rows[0];
 }
 
-module.exports = { listProblems, getProblem, createProblem, updateProblem, deleteProblem };
+module.exports = { listProblems, getProblemsByIds, getGenerationStatus, createProblem, updateProblem, deleteProblem };

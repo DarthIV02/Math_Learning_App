@@ -1,21 +1,12 @@
 import ColoredEmoji from './ColoredEmoji';
 
-/**
- * StickerTray
- *
- * Vertical strip docked to the left of the whiteboard.
- *
- * Props:
- *   stickers — array of { id, emoji, label, defaultValue?, color? }
- *              color is any CSS color string e.g. '#e63946'
- *   onTrayDragStart / onTrayTouchStart / onTrayTouchMove / onTrayTouchEnd
- */
 export default function StickerTray({
   stickers,
   onTrayDragStart,
-  onTrayTouchStart,
-  onTrayTouchMove,
-  onTrayTouchEnd,
+  onTrayDragEnd,
+  onTrayPointerDown,
+  onTrayPointerMove,
+  onTrayPointerUp,
 }) {
   if (!stickers.length) return null;
 
@@ -28,11 +19,11 @@ export default function StickerTray({
             className="tray-sticker"
             draggable
             onDragStart={(e) => onTrayDragStart(e, s)}
-            onTouchStart={(e) => onTrayTouchStart(e, s)}
-            onTouchMove={onTrayTouchMove}
-            onTouchEnd={onTrayTouchEnd}
+            onDragEnd={onTrayDragEnd}
+            onPointerDown={(e) => onTrayPointerDown(e, s)}
+            onPointerMove={onTrayPointerMove}
+            onPointerUp={onTrayPointerUp}
             title={s.label}
-            /* Color dot on the border so the color is obvious even at small size */
             style={s.color ? { borderColor: s.color, boxShadow: `0 2px 0 ${s.color}` } : undefined}
           >
             <ColoredEmoji emoji={s.emoji} color={s.color} size={44} />

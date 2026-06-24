@@ -7,7 +7,6 @@ const path = require('path');
 const app = express();
 
 const allowedOrigins = [
-  'https://math-learning-app-two.vercel.app',
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
