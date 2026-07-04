@@ -41,12 +41,8 @@ CREATE TABLE users (
 
   grade TEXT NOT NULL CHECK (grade IN ('3', '4')),
 
-  -- Optional relation to class
   class_id UUID REFERENCES classes(id) ON DELETE SET NULL,
 
-  -- Used as login identifier
-  -- Self users -> real email
-  -- Teacher-created users -> generated username
   email TEXT NOT NULL UNIQUE,
 
   auth_type TEXT NOT NULL
@@ -61,7 +57,8 @@ CREATE TABLE users (
 
   avatar_url TEXT NOT NULL DEFAULT '/uploads/avatars/student-avatar-placeholder.png',
 
-  has_completed_tutorial BOOLEAN DEFAULT false,
+  has_completed_tutorial    BOOLEAN NOT NULL DEFAULT false,
+  has_completed_assessment  BOOLEAN NOT NULL DEFAULT false,
 
   created_by TEXT NOT NULL DEFAULT 'self'
     CHECK (created_by IN ('self', 'teacher')),
@@ -69,17 +66,42 @@ CREATE TABLE users (
   created_at TIMESTAMPTZ DEFAULT NOW(),
 
   CONSTRAINT self_registered_requires_password
-   CHECK (
-    created_by != 'self'
-    OR auth_type = 'anonymous'
-    OR password_hash IS NOT NULL
-  ),
+    CHECK (
+      created_by != 'self'
+      OR auth_type = 'anonymous'
+      OR password_hash IS NOT NULL
+    ),
 
   CONSTRAINT password_auth_requires_hash
     CHECK (
       auth_type != 'password'
       OR password_hash IS NOT NULL
     )
+);
+
+CREATE TABLE user_dimension_ability (
+  id SERIAL PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+  category_type TEXT NOT NULL CHECK (category_type IN (
+    'number_range', 'operation_category', 'unknown_position',
+    'linguistic_complexity', 'cognitive_demand', 'operation_count'
+  )),
+
+  ability NUMERIC(5,3) NOT NULL DEFAULT 0, -- logit scale, 0 = neutral/average
+  attempts_count INT NOT NULL DEFAULT 0,
+  last_attempted_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  UNIQUE (user_id, category_type)
+);
+
+CREATE INDEX idx_uda_user_type ON user_dimension_ability(user_id, category_type);
+
+CREATE TABLE user_skill_profile (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  profile JSONB NOT NULL DEFAULT '{}',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- ─────────────────────────────────────────────
@@ -100,14 +122,14 @@ CREATE TABLE number_ranges (
 
 CREATE TABLE operation_categories (
   id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE, -- addition_subtraction, multiplication_division, mixed_operations
+  name TEXT NOT NULL UNIQUE,
   difficulty_label TEXT NOT NULL CHECK (difficulty_label IN ('easy', 'medium', 'hard')),
   score INT NOT NULL CHECK (score BETWEEN 1 AND 3)
 );
 
 CREATE TABLE unknown_positions (
   id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE, -- result_unknown, change_unknown, start_unknown
+  name TEXT NOT NULL UNIQUE,
   difficulty_label TEXT NOT NULL CHECK (difficulty_label IN ('easy', 'medium', 'hard')),
   score INT NOT NULL CHECK (score BETWEEN 1 AND 3)
 );
@@ -131,16 +153,10 @@ CREATE TABLE cognitive_demands (
 
 CREATE TABLE operation_counts (
   id SERIAL PRIMARY KEY,
-
   num_operations INT NOT NULL,
-
   description TEXT,
-
-  difficulty_label TEXT NOT NULL
-    CHECK (difficulty_label IN ('easy', 'medium', 'hard')),
-
+  difficulty_label TEXT NOT NULL CHECK (difficulty_label IN ('easy', 'medium', 'hard')),
   score INT NOT NULL CHECK (score BETWEEN 1 AND 3),
-
   UNIQUE (num_operations)
 );
 
@@ -161,7 +177,6 @@ CREATE TABLE problems (
 
   tips TEXT[] NOT NULL DEFAULT '{}',
 
-  -- difficulty dimensions
   number_range_id INT REFERENCES number_ranges(id),
   operation_category_id INT REFERENCES operation_categories(id),
   unknown_position_id INT REFERENCES unknown_positions(id),
@@ -170,11 +185,17 @@ CREATE TABLE problems (
   operation_count_id INT REFERENCES operation_counts(id),
 
   total_difficulty_score INT CHECK (total_difficulty_score BETWEEN 6 AND 18),
-
   difficulty_label TEXT CHECK (difficulty_label IN ('easy', 'medium', 'hard')),
+
+  is_assessment BOOLEAN NOT NULL DEFAULT false,
+  assessment_order INT,
 
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE UNIQUE INDEX idx_problems_assessment_order
+  ON problems (assessment_order)
+  WHERE is_assessment = true;
 
 -- ─────────────────────────────────────────────
 -- Many-to-many: problems ↔ operations & category ↔ operations
@@ -192,9 +213,9 @@ CREATE TABLE operation_category_operations (
   PRIMARY KEY (operation_category_id, operation_id)
 );
 
--- ──────────────────────────────────────────────────────────
--- Many-to-many: grade + difficulty -> attrs options
--- ──────────────────────────────────────────────────────────
+-- ─────────────────────────────────────────────
+-- Difficulty profiles
+-- ─────────────────────────────────────────────
 
 CREATE TABLE difficulty_profiles (
   id SERIAL PRIMARY KEY,
@@ -244,7 +265,7 @@ CREATE TABLE attempts (
 );
 
 -- ─────────────────────────────────────────────
--- Coins to prevent double reward
+-- Coins
 -- ─────────────────────────────────────────────
 
 CREATE TABLE coin_rewards (
@@ -257,14 +278,12 @@ CREATE TABLE coin_rewards (
 );
 
 -- ─────────────────────────────────────────────
--- Sessions - during usage
+-- Sessions
 -- ─────────────────────────────────────────────
 
 CREATE TABLE sessions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-
   started_at TIMESTAMPTZ DEFAULT NOW(),
   ended_at TIMESTAMPTZ
 );

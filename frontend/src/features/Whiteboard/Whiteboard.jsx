@@ -25,6 +25,7 @@ export default function Whiteboard({
   const [hasStartedDrawing, setHasStartedDrawing] = useState(
     Boolean(initialSnapshot?.strokes?.length)
   );
+  const [tool, setTool] = useState('pen');
 
   const {
     canvasRef,
@@ -34,6 +35,7 @@ export default function Whiteboard({
     clearBoard,
     getStrokes,
     setStrokes,
+    setTool: setWhiteboardTool
   } = useWhiteboard();
 
   const {
@@ -51,6 +53,11 @@ export default function Whiteboard({
     getStrokes,
     setStrokes,
   });
+
+  const handleSetTool = (t) => {
+    setTool(t);
+    setWhiteboardTool(t);
+  };
 
   const dragHandlers = useStickerDrag({
     boardRef,
@@ -165,10 +172,24 @@ export default function Whiteboard({
 
         <button
           type="button"
+          onClick={() => handleSetTool('pen')}
+          className={`whiteboard-tool-pen${tool === 'pen' ? ' whiteboard-tool--active' : ''}`}
+        >
+          ✏️
+        </button>
+        <button
+          type="button"
+          onClick={() => handleSetTool('eraser')}
+          className={`whiteboard-tool-eraser${tool === 'eraser' ? ' whiteboard-tool--active' : ''}`}
+        >
+          🧹
+        </button>
+        <button
+          type="button"
           onClick={handleClear}
           className="whiteboard-clear"
         >
-          🧹 <span>Alles weg</span>
+          🗑️
         </button>
 
         {isEmpty && (

@@ -9,6 +9,7 @@ export async function fetchProblems({
   theme,
   difficulty,
   grade,
+  is_assessment = false,
 }) {
   const params = new URLSearchParams();
 
@@ -16,6 +17,7 @@ export async function fetchProblems({
   if (theme) params.set('theme', theme);
   if (difficulty) params.set('difficulty', difficulty);
   if (grade) params.set('grade', grade);
+  params.set('is_assessment', is_assessment);
   params.set('unsolvedOnly', true);
 
   console.log('Fetching problems with params:', Object.fromEntries(params.entries()));
@@ -55,5 +57,24 @@ export async function fetchGenerationStatus(requestId) {
   console.log(data)
 
   if (!res.ok) throw new Error(data.error || 'Status konnte nicht geladen werden.');
+  return data;
+}
+
+export async function fetchAssessmentProblems() {
+  const token = localStorage.getItem('token');
+
+  const res = await fetch(`${BASE_URL}/problems/assessment`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    credentials: 'include',
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.error || 'Assessment-Aufgaben konnten nicht geladen werden.');
+  }
+
   return data;
 }

@@ -64,6 +64,18 @@
   border-bottom: 3px solid #fcd34d;
 }
 
+.answer-feedback-bubble--attempt {
+  background: #c7e6fe;
+  color: #0f1b78;
+  border: 3px solid #4d79fc;
+}
+
+.answer-feedback-bubble--attempt::after {
+  background: #c7e6fe;
+  border-right: 3px solid #4d79fc;
+  border-bottom: 3px solid #4d79fc;
+}
+
 @keyframes bubble-pop {
   from {
     transform: translateY(6px) scale(0.9);

@@ -17,4 +17,12 @@ export const normalizeUser = (user = {}) => ({
     user.has_completed_tutorial ??
     user.tutorial_complete ??
     false,
+  authType:
+    user.authType ??
+    user.auth_type ??
+    '',
+  hasCompletedAssessment:
+    user.hasCompletedAssessment ??
+    user.has_completed_assessment ??
+    false,
 });

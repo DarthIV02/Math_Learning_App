@@ -75,15 +75,6 @@ VALUES
 (3, 3),
 (3, 4);
 
--- These combinations are weak or contradictory:
-
--- Cognitive demand	Bad with	Why
--- sequential_planning	simple_direct_sentence	“first…, then…” usually needs two actions; one short SVO sentence is too restrictive.
--- constructing_hidden_quantities	simple_direct_sentence	Hidden intermediate quantities need explanation.
--- managing_hierarchical_structure	simple_direct_sentence	“groups inside groups” usually needs nested wording.
--- tracking_relational_dependencies	simple_direct_sentence	Relations like “twice as many as…” need at least a relationship clause.
--- tracking_relational_dependencies	two_short_sentences maybe	Possible, but often cramped unless carefully written.
-
 INSERT INTO difficulty_profiles (
   grade,
   difficulty_label,
@@ -155,11 +146,9 @@ AND NOT (
   lc.name = 'two_short_sentences'
   AND cd.name = 'tracking_relational_dependencies'
 ) AND NOT ( 
-  -- We dont want 3rd grade students with hard multiplications
   ot.name = 'multiplication_division' AND 
   nr.name IN ('100-500', '500-1000')
 ) AND NOT (
-  -- Doesn't make sense to have 2 operations but only 1 operation map?
   ot.name = 'mixed_operations'
   AND cd.name = 'direct_operation_mapping'
 );
@@ -191,14 +180,7 @@ VALUES (
   ARRAY['red', 'yellow', 'blue'],
   '{"Rot Lego": 300, "Gelb Lego": 150, "Blau Lego": 150}',
   ARRAY['Beginne damit, die Blöcke von rechts herüberzuziehen. Kannst du herausfinden, wie viele davon rot sind?'],
-  5, -- 500-1000
-  3, -- mixed_operations
-  1, -- result_unknown
-  2, -- two_short_sentences
-  3, -- constructing_hidden_quantities
-  3, -- operation_count_id
-  14,
-  'medium'
+  5, 3, 1, 2, 3, 3, 14, 'medium'
 ),
 (
   1,
@@ -209,18 +191,8 @@ VALUES (
   ARRAY['', '', '', ''],
   '{"Ausreichend?": "Ja"}',
   ARRAY['Beginnen Sie damit, die Ausgaben aufzuschreiben. Wie viel kostet jedes Objekt?'],
-
-  5, -- number_range_id (100-500)
-  3, -- operation_category_id (mixed_operations)
-  1, -- unknown_position_id (result_unknown)
-  4, -- linguistic_complexity_id (longer_irrelevant_text)
-  2, -- cognitive_demand_id (sequential_planning)
-
-  3, -- operation_count_id
-  14,
-  'medium'
+  5, 3, 1, 4, 2, 3, 14, 'medium'
 ),
-
 (
   4,
   3,
@@ -230,18 +202,8 @@ VALUES (
   ARRAY['', ''],
   '{"Scheiben Salami": 21}',
   ARRAY['Beginnen Sie damit, die Pizzen und Salamis zu ziehen.'],
-
-  1, -- 1-100
-  3, -- mixed_operations
-  1, -- result_unknown
-  2, -- two_short_sentences
-  2, -- sequential_planning
-
-  2,
-  12,
-  'medium'
+  1, 3, 1, 2, 2, 2, 12, 'medium'
 ),
-
 (
   1,
   4,
@@ -251,18 +213,8 @@ VALUES (
   ARRAY['', '', ''],
   '{"Ausreichend?": "Nein"}',
   ARRAY['Beginnen Sie damit anzugeben, wie viel Geld Sie für jedes Objekt benötigen.'],
-
-  5,
-  1, -- addition_subtraction
-  1,
-  2,
-  2,
-
-  2,
-  10,
-  'medium'
+  5, 1, 1, 2, 2, 2, 10, 'medium'
 ),
-
 (
   1,
   3,
@@ -272,18 +224,8 @@ VALUES (
   ARRAY['', ''],
   '{"Radio": 332}',
   ARRAY['Beginne damit aufzuschreiben, wie viel Geld er hatte und wie viel er nach dem Radio noch hatte.'],
-
-  2,
-  1,
-  3, -- start_unknown
-  3, -- clear_relationship
-  3, -- constructing_hidden_quantities
-
-  1,
-  12,
-  'medium'
+  2, 1, 3, 3, 3, 1, 12, 'medium'
 ),
-
 (
   1,
   4,
@@ -293,18 +235,8 @@ VALUES (
   ARRAY['', '', ''],
   '{"Will": 140, "Sam": 70}',
   ARRAY['Versuchen Sie, für jeden Schüler ein Sparschwein mit dem gleichen Geldbetrag herauszuholen'],
-
-  5,
-  2, -- multiplication_division
-  1,
-  3,
-  5, -- relational dependencies
-
-  2,
-  15,
-  'hard'
+  5, 2, 1, 3, 5, 2, 15, 'hard'
 ),
-
 (
   4,
   3,
@@ -314,18 +246,8 @@ VALUES (
   ARRAY['', '', ''],
   '{"Gesamtfutter": 922}',
   ARRAY['Beginne damit, die verschiedenen Futtersorten herauszuziehen. Wie viel wiegt jede Sorte?'],
-
-  3,
-  1,
-  1,
-  4,
-  2,
-
-  2,
-  13,
-  'medium'
+  3, 1, 1, 4, 2, 2, 13, 'medium'
 ),
-
 (
   4,
   3,
@@ -335,18 +257,8 @@ VALUES (
   ARRAY['', ''],
   '{"Kisten": 8}',
   ARRAY['Beginne damit, die Äpfel in die Kisten zu ziehen.'],
-
-  1,
-  2,
-  1,
-  1,
-  4, -- hierarchical structure
-
-  1,
-  10,
-  'medium'
+  1, 2, 1, 1, 4, 1, 10, 'medium'
 ),
-
 (
   4,
   3,
@@ -356,18 +268,8 @@ VALUES (
   ARRAY['', ''],
   '{"Kastanien": 30}',
   ARRAY['Beginnen Sie damit, die Kastanien pro Person zu zeichnen.'],
-
-  1,
-  2,
-  1,
-  1,
-  1,
-
-  1,
-  7,
-  'easy'
+  1, 2, 1, 1, 1, 1, 7, 'easy'
 ),
-
 (
   4,
   3,
@@ -377,41 +279,22 @@ VALUES (
   ARRAY['', ''],
   '{"Erdbeeren": 8}',
   ARRAY['Beginnen Sie damit, die Erdbeeren pro Schüssel zu zeichnen.'],
-
-  1,
-  2,
-  1,
-  1,
-  2,
-
-  1,
-  8,
-  'easy'
-)
-;
+  1, 2, 1, 1, 2, 1, 8, 'easy'
+);
 
 INSERT INTO problem_operations (problem_id, operation_id)
 VALUES
 (1, 4),
 (1, 2),
-
 (2, 1),
 (2, 2),
-
 (3, 3),
 (3, 1),
-
 (4, 1),
 (4, 2),
-
 (5, 2),
-
 (6, 4),
-
 (7, 1),
-
 (8, 4),
-
 (9, 3),
-
 (10, 4);

@@ -12,7 +12,7 @@ export default function ProblemSelector({
 
   return (
     <div className="problem-selector-wrapper">
-      <BackButton onBack={onBack} />
+      {onBack && <BackButton onBack={onBack} />}
 
       <div className="problem-selector">
         <SwitchButton

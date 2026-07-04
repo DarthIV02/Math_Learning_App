@@ -1,36 +1,25 @@
-const db = require('../db'); // adjust path to your actual db file
+const db = require('../db');
+const { recordAttempt } = require('./attemptService');
 
-async function saveAttempts(userId, attempts) {
-  if (!attempts?.length) return 0;
+async function submitAttempts(user_id, attempts) {
+  const results = [];
 
-  const values = [];
-  const params = [];
+  for (const attempt of attempts) {
+    const client = await db.connect();
+    try {
+      await client.query('BEGIN');
+      const recorded = await recordAttempt(client, user_id, attempt);
+      await client.query('COMMIT');
+      results.push({ ok: true, attempt: recorded });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      results.push({ ok: false, error: err.message, problem_id: attempt.problem_id });
+    } finally {
+      client.release();
+    }
+  }
 
-  attempts.forEach((a, i) => {
-    const base = i * 6;
-
-    values.push(
-      `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6})`
-    );
-
-    params.push(
-      userId,
-      a.problem_id,
-      a.answer_given ?? null,
-      a.is_correct,
-      a.time_spent_seconds,
-      a.score ?? null
-    );
-  });
-
-  const sql = `
-    INSERT INTO attempts
-      (user_id, problem_id, answer_given, is_correct, time_spent_seconds, score)
-    VALUES ${values.join(', ')}
-  `;
-
-  const result = await db.query(sql, params);
-  return result.rowCount;
+  return results;
 }
 
-module.exports = { saveAttempts };
+module.exports = { submitAttempts };

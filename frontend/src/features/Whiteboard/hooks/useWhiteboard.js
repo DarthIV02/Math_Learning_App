@@ -8,6 +8,11 @@ export default function useWhiteboard() {
   const strokesRef = useRef([]);
   const currentStrokeRef = useRef(null);
 
+  // Eraser switches
+  const isErasingRef = useRef(false);
+  const [tool, setTool] = useState('pen'); // 'pen' | 'eraser'
+  const toolRef = useRef('pen');
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -60,16 +65,45 @@ export default function useWhiteboard() {
     };
   };
 
+  // ERASER
+
+  const setTool_ = (t) => {
+    setTool(t);
+    toolRef.current = t;
+  };
+
+  const ERASER_RADIUS = 16;
+
+  const eraseAt = (x, y) => {
+    const before = strokesRef.current.length;
+
+    strokesRef.current = strokesRef.current.filter((stroke) =>
+      !stroke.points.some(
+        (p) => Math.hypot(p.x - x, p.y - y) < ERASER_RADIUS
+      )
+    );
+
+    if (strokesRef.current.length !== before) {
+      redrawStrokes(ctx, canvasRef.current);
+    }
+  };
+
   const startDrawing = (event) => {
     if (!ctx) return;
+
+    const { x, y } = getPointerPosition(event);
+
+    if (toolRef.current === 'eraser') {
+      isErasingRef.current = true;
+      eraseAt(x, y);
+      return;
+    }
 
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     isDrawingRef.current = true;
     didStrokeRef.current = false;
-
-    const { x, y } = getPointerPosition(event);
 
     currentStrokeRef.current = {
       color: '#2563eb',
@@ -87,14 +121,22 @@ export default function useWhiteboard() {
   };
 
   const draw = (event) => {
-    if (!isDrawingRef.current || !ctx) return;
+    if (!ctx) return;
+
+    // Guard: only act if actively drawing or erasing
+    if (!isDrawingRef.current && !isErasingRef.current) return;
+
+    const { x, y } = getPointerPosition(event);
+
+    if (toolRef.current === 'eraser' && isErasingRef.current) {
+      eraseAt(x, y);
+      return;
+    }
 
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     didStrokeRef.current = true;
-
-    const { x, y } = getPointerPosition(event);
 
     currentStrokeRef.current?.points.push({
       x: x,
@@ -107,6 +149,11 @@ export default function useWhiteboard() {
 
   const stopDrawing = () => {
     if (!ctx) return false;
+
+    if (toolRef.current === 'eraser') {
+      isErasingRef.current = false;
+      return true; // trigger snapshot save
+    }
 
     if (!isDrawingRef.current) {
       return false;
@@ -188,5 +235,7 @@ export default function useWhiteboard() {
     clearBoard,
     getStrokes,
     setStrokes,
+    tool,
+    setTool: setTool_,
   };
 }

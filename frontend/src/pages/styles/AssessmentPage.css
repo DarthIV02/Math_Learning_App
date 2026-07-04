@@ -1,0 +1,258 @@
+@reference "tailwindcss";
+
+/* ─── Page shell (mirrors LoginPage/HomePage pattern) ─── */
+
+.assessment-page {
+  @apply min-h-screen;
+}
+
+.assessment-page__content {
+  @apply relative z-[3] flex flex-col items-center justify-start min-h-screen;
+  padding: 24px 16px 40px;
+}
+
+/* ─── Mascot ─── */
+
+.assessment-mascot {
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  overflow: hidden;
+  object-fit: cover;
+  object-position: center 10%;
+}
+
+/* ─── Progress dots ─── */
+
+.assessment-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.assessment-progress-dot {
+  flex: 1;
+  height: 6px;
+  border-radius: 99px;
+  background: #d6ead9;
+  transition: background 0.3s;
+}
+
+.assessment-progress-dot.done   { background: #2e7d4f; }
+.assessment-progress-dot.active { background: #52c47c; }
+
+/* ─── Screen wrapper ─── */
+
+.assessment-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  width: 100%;
+}
+
+/* ─── Welcome ─── */
+
+.assessment-welcome-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #183226;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  text-align: center;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.65);
+  margin-bottom: 8px;
+}
+
+.assessment-welcome-sub {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #355234;
+  text-align: center;
+  line-height: 1.45;
+  margin-bottom: 0;
+}
+
+.assessment-info-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f3faf5;
+  border: 0.5px solid #c4e0ca;
+  border-radius: 1.25rem;
+  padding: 13px 15px;
+  margin: 18px 0 20px;
+}
+
+.assessment-info-icon { font-size: 22px; }
+
+.assessment-info-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #2e7d4f;
+}
+
+.assessment-info-sub {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #4a7a5e;
+  margin-top: 2px;
+}
+
+/* ─── Quiz ─── */
+
+.assessment-q-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.assessment-q-label {
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: #52c47c;
+  text-transform: uppercase;
+}
+
+.assessment-q-category {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #7ab890;
+  background: #e8f7ee;
+  border-radius: 99px;
+  padding: 3px 10px;
+}
+
+.assessment-problem-box {
+  background: #f3faf5;
+  border: 1.5px solid #c4e0ca;
+  border-radius: 1.25rem;
+  padding: 22px 16px;
+  text-align: center;
+  min-height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.assessment-problem-text {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #183226;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.assessment-answer-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.assessment-answer-label {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #355234;
+  white-space: nowrap;
+}
+
+.assessment-answer-input {
+  flex: 1;
+  height: 48px;
+  border: 2px solid #c4e0ca;
+  border-radius: 1rem;
+  padding: 0 14px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #183226;
+  background: #fff;
+  font-family: inherit;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+  -moz-appearance: textfield;
+}
+
+.assessment-answer-input::-webkit-inner-spin-button,
+.assessment-answer-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.assessment-answer-input:focus        { border-color: #2e7d4f; }
+.assessment-answer-input.correct      { border-color: #2e7d4f; background: #d0f0de; }
+.assessment-answer-input.wrong        { border-color: #e05a4e; background: #fde8e7; }
+.assessment-answer-input:disabled     { opacity: 1; }
+
+.assessment-feedback {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: center;
+  min-height: 20px;
+  margin-bottom: 14px;
+  color: transparent;
+  transition: color 0.2s;
+}
+
+.assessment-feedback--correct { color: #2e7d4f; }
+.assessment-feedback--wrong   { color: #c0392b; }
+
+/* ─── Shared button ─── */
+
+.assessment-btn {
+  width: 100%;
+  border: none;
+  border-radius: 1rem;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, transform 0.12s, opacity 0.2s;
+  margin-top: 20px;
+}
+
+.assessment-btn--primary {
+  background: #2e7d4f;
+  color: #fff;
+}
+
+.assessment-btn--primary:hover  { background: #235e3d; }
+.assessment-btn--primary:active { transform: scale(0.98); }
+.assessment-btn--primary.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* ─── Loading ─── */
+
+.assessment-screen--loading {
+  justify-content: center;
+  min-height: 260px;
+  gap: 20px;
+}
+
+.assessment-loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #d6ead9;
+  border-top-color: #2e7d4f;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.assessment-loading-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #355234;
+}

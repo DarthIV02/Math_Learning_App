@@ -18,6 +18,11 @@ import SolveProblemsPage from './pages/SolveProblemsPage';
 import SelectTopic from './pages/SelectTopicPage';
 import RegisterStudentPage from './pages/RegisterPage';
 import RegisterClassPage from './pages/RegisterClass';
+import AssessmentPage from './pages/AssessmentPage';
+
+const needsAssessment = (user) =>
+  user?.authType !== 'anonymous' &&
+  !user?.hasCompletedAssessment;
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -26,7 +31,8 @@ function App() {
   const [token, setToken] = useState(null);
   const [pageState, setPageState] = useState({});
   const [problemFilter, setProblemFilter] = useState(null);
-  const startTutorialRef = useRef(null); // TutorialProvider will register its start() here
+  const [showAssessment, setShowAssessment] = useState(false);
+  const startTutorialRef = useRef(null);
   const tutorialGoToStepRef = useRef(null);
   const hasTriedStartingTutorialRef = useRef(false);
   const tutorialCurrentStepRef = useRef(null);
@@ -34,28 +40,21 @@ function App() {
   const restoreSession = async (savedToken) => {
     try {
       const response = await fetch(
-       `${import.meta.env.VITE_API_URL}/users/me`,
-        {
-          headers: {
-            Authorization: `Bearer ${savedToken}`,
-          },
-        }
+        `${import.meta.env.VITE_API_URL}/users/me`,
+        { headers: { Authorization: `Bearer ${savedToken}` } }
       );
 
-      if (!response.ok) {
-        throw new Error('Session expired');
-      }
+      if (!response.ok) throw new Error('Session expired');
 
       const userData = await response.json();
       const normalizedUser = normalizeUser(userData);
 
-      if (normalizedUser.avatarUrl) {
-        saveAvatarUrl(normalizedUser.avatarUrl);
-      }
+      if (normalizedUser.avatarUrl) saveAvatarUrl(normalizedUser.avatarUrl);
 
       setUser(normalizedUser);
       setToken(savedToken);
       setIsLoggedIn(true);
+      setShowAssessment(needsAssessment(normalizedUser)); // re-check on every session restore
       handleNavigate('home');
     } catch (err) {
       localStorage.removeItem('token');
@@ -64,19 +63,17 @@ function App() {
 
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
-    if (savedToken) {
-      restoreSession(savedToken);
-    }
+    if (savedToken) restoreSession(savedToken);
   }, []);
 
+  // Start tutorial only after assessment is done
   useEffect(() => {
-    if (!isLoggedIn || !user) return;
+    if (!isLoggedIn || !user || showAssessment) return;
     if (hasTriedStartingTutorialRef.current) return;
 
     hasTriedStartingTutorialRef.current = true;
 
     const shouldStartTutorial = !user.hasCompletedTutorial;
-
     console.log('Should start tutorial:', shouldStartTutorial);
 
     if (shouldStartTutorial) {
@@ -84,7 +81,7 @@ function App() {
         startTutorialRef.current?.();
       }, 500);
     }
-  }, [isLoggedIn, user]);
+  }, [isLoggedIn, user, showAssessment]);
 
   const setProblems = useCallback((updater) => {
     setPageState((prev) => ({
@@ -101,24 +98,49 @@ function App() {
     setProblems,
   });
 
+  // Called after login (existing users, guest) — assessment shown if not yet completed
   const handleAuthSuccess = (result) => {
     const rawUser = result.user || result;
     const normalizedUser = normalizeUser(rawUser);
 
-    if (normalizedUser.avatarUrl) {
-      saveAvatarUrl(normalizedUser.avatarUrl);
-    }
+    if (normalizedUser.avatarUrl) saveAvatarUrl(normalizedUser.avatarUrl);
 
     localStorage.setItem('token', result.token);
 
     setUser(normalizedUser);
     setToken(result.token);
     setIsLoggedIn(true);
+    setShowAssessment(needsAssessment(normalizedUser));
     handleNavigate('home');
   };
 
-  const handleRegisterClassSuccess = (result) => {
+  // Registration uses the same handler — assessment shown if not yet completed
+  const handleRegisterStudentSuccess = handleAuthSuccess;
+
+  const handleRegisterClassSuccess = () => {
     handleNavigate('login');
+  };
+
+  // Called when child finishes the assessment
+  const handleAssessmentComplete = async () => {
+    setShowAssessment(false);
+
+    setUser((prev) => ({
+      ...prev,
+      hasCompletedAssessment: true,
+    }));
+
+    try {
+      await updateUser(
+        user.id,
+        {
+          hasCompletedAssessment: true,
+        },
+        token
+      );
+    } catch (err) {
+      console.error('Could not mark assessment as completed:', err);
+    }
   };
 
   const handleUserUpdate = async (updatedUser) => {
@@ -135,12 +157,7 @@ function App() {
     );
 
     const normalizedUser = normalizeUser(savedUser);
-
-    // Save avatar locally
-    if (normalizedUser.avatarUrl) {
-      saveAvatarUrl(normalizedUser.avatarUrl);
-    }
-
+    if (normalizedUser.avatarUrl) saveAvatarUrl(normalizedUser.avatarUrl);
     setUser(normalizedUser);
   };
 
@@ -150,19 +167,13 @@ function App() {
   };
 
   const handleLogout = () => {
-    // Remove auth data
     localStorage.removeItem('token');
     localStorage.removeItem('avatarUrl');
+    localStorage.removeItem('attempt_queue');
     hasTriedStartingTutorialRef.current = false;
 
-    // Remove queued attempts
-    localStorage.removeItem('attempt_queue');
-
-    // Remove saved problem sessions
     Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('session:')) {
-        localStorage.removeItem(key);
-      }
+      if (key.startsWith('session:')) localStorage.removeItem(key);
     });
 
     setUser(null);
@@ -171,6 +182,7 @@ function App() {
     setIsLoggedIn(false);
     setCurrentPage('login');
     setPageState({});
+    setShowAssessment(false);
   };
 
   const handleRefreshCurrentUser = async () => {
@@ -179,20 +191,14 @@ function App() {
     const userData = await fetchCurrentUser(token);
     const normalizedUser = normalizeUser(userData);
 
-    if (normalizedUser.avatarUrl) {
-      saveAvatarUrl(normalizedUser.avatarUrl);
-    }
+    if (normalizedUser.avatarUrl) saveAvatarUrl(normalizedUser.avatarUrl);
 
     setUser(normalizedUser);
     return normalizedUser;
   };
 
   const loadProblemsForFilter = async (filter) => {
-    const finalFilter = {
-      ...filter,
-      grade: user?.grade,
-    };
-
+    const finalFilter = { ...filter, grade: user?.grade, is_assessment: false };
     const problems = await fetchProblems(finalFilter);
 
     setProblemFilter(finalFilter);
@@ -207,75 +213,53 @@ function App() {
       }, 500);
     }
   };
-  
+
   const handlePlayAgain = async () => {
     if (!problemFilter) return;
 
-    setPageState((prev) => ({
-      ...prev,
-      problems: [],
-    }));
+    setPageState((prev) => ({ ...prev, problems: [] }));
 
     try {
       const problems = await fetchProblems(problemFilter);
-
-      setPageState((prev) => ({
-        ...prev,
-        problems,
-      }));
+      setPageState((prev) => ({ ...prev, problems }));
     } catch (err) {
-      setPageState((prev) => ({
-        ...prev,
-        problems: [],
-        error: err.message,
-      }));
+      setPageState((prev) => ({ ...prev, problems: [], error: err.message }));
     }
   };
 
   const handleCoinsEarned = (amount) => {
     setUser((prev) => {
       if (!prev) return prev;
-
-      return {
-        ...prev,
-        coins: (prev.coins ?? 0) + amount,
-      };
+      return { ...prev, coins: (prev.coins ?? 0) + amount };
     });
   };
 
   const handleTutorialComplete = useCallback(async () => {
     if (!user?.id || !token) return;
 
-    await updateUser(
-      user.id,
-      { hasCompletedTutorial: true },
-      token
-    );
-
-    setUser((prev) => ({
-      ...prev,
-      hasCompletedTutorial: true,
-    }));
+    await updateUser(user.id, { hasCompletedTutorial: true }, token);
+    setUser((prev) => ({ ...prev, hasCompletedTutorial: true }));
   }, [user?.id, token]);
 
+  // ── Not logged in ──────────────────────────────────────────────────────────
   if (!isLoggedIn) {
     if (currentPage === 'register') {
-        return (
-          <RegisterStudentPage
-              onRegisterSuccess={handleAuthSuccess}
-              onBackToLogin={() => handleNavigate('login')}
-            />
-        );
-      }
+      return (
+        <RegisterStudentPage
+          onRegisterSuccess={handleRegisterStudentSuccess}
+          onBackToLogin={() => handleNavigate('login')}
+        />
+      );
+    }
 
     if (currentPage === 'register_class') {
-        return (
-          <RegisterClassPage
-              onRegisterSuccess={handleRegisterClassSuccess}
-              onBackToLogin={() => handleNavigate('login')}
-            />
-        );
-      }
+      return (
+        <RegisterClassPage
+          onRegisterSuccess={handleRegisterClassSuccess}
+          onBackToLogin={() => handleNavigate('login')}
+        />
+      );
+    }
 
     return (
       <LoginPage
@@ -286,6 +270,18 @@ function App() {
     );
   }
 
+  // ── Assessment (non-guest users who haven't completed it yet) ──────────────
+  if (showAssessment) {
+    return (
+      <AssessmentPage
+        token={token}
+        user={user}
+        onAssessmentComplete={handleAssessmentComplete}
+      />
+    );
+  }
+
+  // ── Main app ───────────────────────────────────────────────────────────────
   const renderPage = () => {
     switch (currentPage) {
       case 'profile':
@@ -311,7 +307,6 @@ function App() {
             onCoinsEarned={handleCoinsEarned}
           />
         );
-
       case 'select-topic':
         return (
           <SelectTopic

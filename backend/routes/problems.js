@@ -3,23 +3,23 @@ const problemService = require('../services/problemService');
 const { authMiddleware } = require('../middleware/auth');
 
 router.get('/', authMiddleware, async (req, res) => {
-
   try {
     const problems = await problemService.listProblems({
-    operation: req.query.operation,
-    theme: req.query.theme,
-    difficulty_label: req.query.difficulty,
-    grade: req.query.grade,
-    limit: req.query.limit ?? 7,
-    user_id: req.user.id,
-    unsolvedOnly: req.query.unsolvedOnly === 'true',
+      operation: req.query.operation,
+      theme: req.query.theme,
+      difficulty_label: req.query.difficulty,
+      grade: req.query.grade,
+      limit: req.query.limit ?? 7,
+      user_id: req.user.id,
+      unsolvedOnly: req.query.unsolvedOnly === 'true',
+      is_assessment: req.query.is_assessment === 'true',
 
-    number_range: req.query.number_range ?? null,
-    operation_type: req.query.operation_type ?? null,
-    unknown_position: req.query.unknown_position ?? null,
-    linguistic_complexity: req.query.linguistic_complexity ?? null,
-    cognitive_demand: req.query.cognitive_demand ?? null,
-  });
+      number_range: req.query.number_range ?? null,
+      operation_category: req.query.operation_category ?? null, // fixed param name
+      unknown_position: req.query.unknown_position ?? null,
+      linguistic_complexity: req.query.linguistic_complexity ?? null,
+      cognitive_demand: req.query.cognitive_demand ?? null,
+    });
     res.json(problems);
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
@@ -32,9 +32,17 @@ router.get('/generation-status', authMiddleware, async (req, res) => {
     if (!requestId) {
       return res.status(400).json({ error: 'requestId is required' });
     }
-
     const status = await problemService.getGenerationStatus(requestId, req.user.id);
     res.json(status);
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+router.get('/assessment', authMiddleware, async (req, res) => {
+  try {
+    const problems = await problemService.getAssessmentProblems();
+    res.json(problems);
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
   }
@@ -48,8 +56,6 @@ router.get('/:id', authMiddleware, async (req, res) => {
     res.status(err.status || 500).json({ error: err.message });
   }
 });
-
-// Might need to update to just question_text and correct_answers?
 
 router.post('/', authMiddleware, async (req, res) => {
   const { question_text, subject_object, correct_answers } = req.body;

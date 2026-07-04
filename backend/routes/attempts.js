@@ -23,19 +23,10 @@ router.get('/me', authMiddleware, async (req, res) => {
   }
 });
 
-router.get('/problem/:problem_id', authMiddleware, async (req, res) => {
+router.get('/me/mastery', authMiddleware, async (req, res) => {
   try {
-    const attempts = await attemptService.getAttemptsForProblem(req.params.problem_id);
-    res.json(attempts);
-  } catch (err) {
-    res.status(err.status || 500).json({ error: err.message });
-  }
-});
-
-router.get('/user/:user_id', authMiddleware, async (req, res) => {
-  try {
-    const attempts = await attemptService.getAttemptsForUser(req.params.user_id);
-    res.json(attempts);
+    const profile = await masteryService.getProfileForUser(req.user.id);
+    res.json(profile);
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
   }

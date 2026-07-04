@@ -2,7 +2,9 @@ const db = require('../db');
 const aiService = require('./aiService');
 const {getIdByName, getNumberRangeId, getOperationCountId, getOperationIds} = require('../utils/get_db')
 
-async function getProblemsByIds(ids, includeTips = false) {
+async function getProblemsByIds(ids, includeTips = false) { 
+  // This is what it ultimately returns from the db when problems are created
+
   if (!ids.length) return [];
 
   const { rows } = await db.query(
@@ -11,6 +13,7 @@ async function getProblemsByIds(ids, includeTips = false) {
       p.id,
       p.question_text,
       p.subject_object,
+      p.correct_answers,
       p.emojis,
       p.colors,
       p.grade,
@@ -114,6 +117,7 @@ async function listProblems({
   limit = 7,
   user_id,
   unsolvedOnly = false,
+  is_assessment = false,
 
   number_range,           // e.g. '100-1000'
   operation_category,         // e.g. 'mixed_operations'
@@ -152,6 +156,9 @@ async function listProblems({
     values.push(Number(grade));
     conditions.push(`p.grade = $${values.length}`);
   }
+
+  values.push(is_assessment);
+  conditions.push(`p.is_assessment = $${values.length}`);
 
   if (number_range) {
     values.push(number_range);
@@ -431,9 +438,17 @@ async function createProblem({
 
   for (let i = 0; i < quantity; i++) {
 
-    const questionText = generated[i];
+    const questionText = generated[i]["text"] || generated[i]["question_text"];
+    const solution = generated[i]["solution"];
+    const main_objects = generated[i]["main_objects"];
+    const stickers = generated[i]["stickers"];
+    const colors = generated[i]["colors"];
+    const init_tip = [generated[i]["initial_tip"]];
+    const topic = generated[i]["topic"];
+    const operations = generated[i]["operations"];
 
-    const theme_id = await getIdByName("themes", theme, db);
+    const theme_id = await getIdByName("themes", theme ?? topic, db);
+  
     const number_range_id = await getNumberRangeId(attrs.number_range, grade, db);
     const operation_category_id = await getIdByName(
       "operation_categories",
@@ -460,6 +475,10 @@ async function createProblem({
       db
     );
 
+    const operation_ids = await Promise.all(
+      operations.map(operation => getIdByName("operations", operation, db))
+    );
+
     const result = await db.query(
       `
       INSERT INTO problems (
@@ -475,9 +494,13 @@ async function createProblem({
         operation_count_id,
         total_difficulty_score,
         correct_answers,
+        subject_object,
+        emojis,
+        colors,
+        tips,
         ai_full_return
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
       RETURNING *
       `,
       [
@@ -492,7 +515,11 @@ async function createProblem({
         cognitive_demand_id,
         operation_count_id,
         attrs.total_difficulty_score,
-        {}, // fill later need to parse/compute answers
+        solution,
+        main_objects,
+        stickers,
+        colors,
+        init_tip,
         {
           // Missing log of AI --> Need to parse
         },
@@ -503,16 +530,16 @@ async function createProblem({
 
     // Need to compute operations from the equation
 
-    // for (const operationId of operation_ids) {
-    //   await db.query(
-    //     `
-    //     INSERT INTO problem_operations (problem_id, operation_id)
-    //     VALUES ($1, $2)
-    //     ON CONFLICT DO NOTHING
-    //     `,
-    //     [insertedProblem.id, operationId]
-    //   );
-    // }
+    for (const operationId of operation_ids) {
+      await db.query(
+        `
+        INSERT INTO problem_operations (problem_id, operation_id)
+        VALUES ($1, $2)
+        ON CONFLICT DO NOTHING
+        `,
+        [insertedProblem.id, operationId]
+      );
+    }
 
     if (generationRequestId) {
       await db.query(
@@ -529,12 +556,13 @@ async function createProblem({
 
     insertedProblems.push(insertedProblem);
 
-    if (generationRequestId) {
-      await db.query(
-        `UPDATE generation_requests SET status = 'completed', completed_at = now() WHERE id = $1`,
-        [generationRequestId]
-      );
-    }
+  }
+
+  if (generationRequestId) {
+    await db.query(
+      `UPDATE generation_requests SET status = 'completed', completed_at = now() WHERE id = $1`,
+      [generationRequestId]
+    );
   }
 
   console.log("Inserted NEW problems to db: ", insertedProblems.length)
@@ -587,6 +615,14 @@ async function getGenerationStatus(generationRequestId, userId) {
     quantity: job.quantity,
     problems: ready,
   };
+}async function getAssessmentProblems() {
+  const { rows } = await db.query(
+    `SELECT id, question_text, subject_object, emojis, colors, tips, correct_answers
+     FROM problems
+     WHERE is_assessment = true
+     ORDER BY assessment_order ASC`
+  );
+  return rows;
 }
 
 async function updateProblem(id, {
@@ -697,4 +733,12 @@ async function deleteProblem(id) {
   return result.rows[0];
 }
 
-module.exports = { listProblems, getProblemsByIds, getGenerationStatus, createProblem, updateProblem, deleteProblem };
+module.exports = {
+  listProblems,
+  getProblemsByIds,
+  getGenerationStatus,
+  getAssessmentProblems,
+  createProblem,
+  updateProblem,
+  deleteProblem,
+};

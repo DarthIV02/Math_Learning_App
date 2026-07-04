@@ -34,6 +34,8 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/problems', require('./routes/problems'));
 app.use('/api/attempts', require('./routes/attempts'));
 app.use('/api/progress', require('./routes/progress'));
+app.use('/api/assessment', require('./routes/assessment'));
+app.use('/api/mastery', require('./routes/mastery'));
 app.use('/api', require('./routes/lookups'));
 
 const PORT = process.env.PORT || 3001;

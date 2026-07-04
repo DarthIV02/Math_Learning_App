@@ -12,6 +12,7 @@ const {
 } = require("../utils/prompts_LLM/evaluate_problem_difficulty");
 const validateProblemEvaluation = require("../utils/compare_evaluation.js");
 const generateProblemRepairPrompt = require("../utils/prompts_LLM/repair_problem_alignment_prompt");
+const generateProblemVisualSupportPrompt = require("../utils/prompts_LLM/generate_sticker_help")
 
 const API_KEY = process.env.API_KEY;
 const MODEL = process.env.MODEL;
@@ -260,7 +261,42 @@ async function call_openai_api(type = "problem", debug = false, parameters) {
 
     }
 
-    return finalResult.problems.map(problem => problem.fixed_full_problem_text);
+    const fixedProblems = finalResult.problems.map(problem => problem.fixed_full_problem_text) 
+
+    const ProblemVisualSupportPrompt = generateProblemVisualSupportPrompt({
+      problems: fixedProblems,
+      ...parameters,
+    });
+
+    const ProblemVisualSupportResult = await prompting_openai(
+      ProblemVisualSupportPrompt.system_prompt,
+      ProblemVisualSupportPrompt.user_prompt,
+      ProblemVisualSupportPrompt.return_format
+    );
+
+    if (debug){
+      console.log("Quantity: ", parameters.quantity);
+      console.log(ProblemVisualSupportResult);
+      console.log(JSON.stringify(ProblemVisualSupportResult, null, 2));
+      console.log(fixedProblems);
+    }
+
+    return ProblemVisualSupportResult.problems.map((problem) => {
+      if (debug){
+        console.log("problem_index:", problem.problem_index, "→ text:", fixedProblems[problem.problem_index]);
+      }
+      
+      return {
+        text: fixedProblems[problem.problem_index],
+        solution: JSON.stringify(problem.solution),
+        main_objects: problem.main_objects,
+        stickers: problem.stickers,
+        colors: problem.colors,
+        initial_tip: problem.initial_tip,
+        topic: problem.topic,
+        operations: problem.operations,
+      };
+    });
 
   } else if (type === "help") {
     throw new Error("Help prompt not implemented yet");
@@ -331,25 +367,25 @@ if (require.main === module) {
 //   cognitive_demand_description: 'One direct operation.',
 //   num_simple_operations: 1
 //   }
-{
-  operation: 'subtraction',
-  theme: null,
-  grade: 3,
-  quantity: 1,
-  id: 172,
-  difficulty_label: 'medium',
-  total_difficulty_score: 12,
-  number_range: '500-1000',
-  number_range_min_value: 500,
-  number_range_max_value: 1000,
-  operation_category: 'addition_subtraction',
-  unknown_position: 'result_unknown',
-  linguistic_complexity: 'two_short_sentences',
-  linguistic_complexity_description: 'Two short sentences with clear wording.',
-  cognitive_demand: 'sequential_planning',
-  cognitive_demand_description: 'Two or more steps in clear order.',
-  num_simple_operations: 2
-}
+// {
+//   operation: 'subtraction',
+//   theme: null,
+//   grade: 3,
+//   quantity: 1,
+//   id: 172,
+//   difficulty_label: 'medium',
+//   total_difficulty_score: 12,
+//   number_range: '500-1000',
+//   number_range_min_value: 500,
+//   number_range_max_value: 1000,
+//   operation_category: 'addition_subtraction',
+//   unknown_position: 'result_unknown',
+//   linguistic_complexity: 'two_short_sentences',
+//   linguistic_complexity_description: 'Two short sentences with clear wording.',
+//   cognitive_demand: 'sequential_planning',
+//   cognitive_demand_description: 'Two or more steps in clear order.',
+//   num_simple_operations: 2
+// }
 //  {
 //   operation: null,
 //   theme: 'längen',
@@ -388,10 +424,83 @@ if (require.main === module) {
 //   cognitive_demand_description: 'Groups inside groups.',
 //   num_simple_operations: 2
 // }
+
+// {
+//   operation: null,
+//   theme: null,
+//   grade: 3,
+//   quantity: 3,
+//   difficulty_label: 'easy',
+//   total_difficulty_score: 12,
+//   number_range: '100-500',
+//   number_range_min_value: 100,
+//   number_range_max_value: 500,
+//   operation_category: 'addition_subtraction',
+//   unknown_position: 'change_unknown',
+//   linguistic_complexity: 'two_short_sentences',
+//   linguistic_complexity_description: 'Two short sentences with clear wording.',
+//   cognitive_demand: 'sequential_planning',
+//   cognitive_demand_description: 'Two or more steps in clear order.',
+//   num_simple_operations: 1
+// }
+// {
+//   operation: null,
+//   theme: null,
+//   grade: 3,
+//   quantity: 3,
+//   difficulty_label: 'easy',
+//   total_difficulty_score: 12,
+//   number_range: '100-500',
+//   number_range_min_value: 100,
+//   number_range_max_value: 500,
+//   operation_category: 'mixed_operations',
+//   unknown_position: 'result_unknonw',
+//   linguistic_complexity: 'two_short_sentences',
+//   linguistic_complexity_description: 'Two short sentences with clear wording.',
+//   cognitive_demand: 'sequential_planning',
+//   cognitive_demand_description: 'Two or more steps in clear order.',
+//   num_simple_operations: 3
+// }
+// {
+//   operation: null,
+//   theme: null,
+//   grade: 3,
+//   quantity: 3,
+//   difficulty_label: 'easy',
+//   total_difficulty_score: 12,
+//   number_range: '100-500',
+//   number_range_min_value: 100,
+//   number_range_max_value: 500,
+//   operation_category: 'mixed_operations',
+//   unknown_position: 'result_unknown',
+//   linguistic_complexity: 'longer_irrelevant_text',
+//   linguistic_complexity_description: 'Longer text with irrelevant information.',
+//   cognitive_demand: 'sequential_planning',
+//   cognitive_demand_description: 'Two or more steps in clear order.',
+//   num_simple_operations: 1
+// }
+{
+  operation: null,
+  theme: null,
+  grade: 3,
+  quantity: 3,
+  difficulty_label: 'easy',
+  total_difficulty_score: 12,
+  number_range: '100-500',
+  number_range_min_value: 100,
+  number_range_max_value: 500,
+  operation_category: 'mixed_operations',
+  unknown_position: 'result_unknown',
+  linguistic_complexity: 'two_short_sentences',
+  linguistic_complexity_description: 'Two short sentences with clear wording.',
+  cognitive_demand: 'constructing_hidden_quantities',
+  cognitive_demand_description: 'Must derive an intermediate quantity.',
+  num_simple_operations: 2
+}
   
   );
 
-    console.log(result);
+    console.log(JSON.stringify(result, null, 2));
   }
 
   main();

@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 const { JWT_SECRET } = require('../middleware/auth');
+const { initializeUserAbility } = require('./masteryService');
 
 const crypto = require('crypto');
 
@@ -22,7 +23,11 @@ function formatUser(user) {
     email: user.email,
     grade: user.grade,
     avatarUrl: user.avatar_url,
+
+    auth_type: user.auth_type,
+
     has_completed_tutorial: user.has_completed_tutorial ?? false,
+    has_completed_assessment: user.has_completed_assessment ?? false,
   };
 }
 
@@ -45,27 +50,42 @@ function generatePassword() {
 }
 
 async function registerStudent({ firstName, lastName, email, password, grade }) {
-  const existing = await db.query('SELECT id FROM users WHERE email = $1', [email]);
-  if (existing.rows.length) {
-    const err = new Error('Email already in use');
-    err.status = 409;
+  const client = await db.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const existing = await client.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (existing.rows.length) {
+      const err = new Error('Email already in use');
+      err.status = 409;
+      throw err;
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+    const display_name = `${firstName || ''} ${lastName || ''}`.trim() || email;
+
+    const result = await client.query(
+      `INSERT INTO users (firstname, lastname, email, password_hash, grade, auth_type, created_by)
+       VALUES ($1, $2, $3, $4, $5, 'password', 'self')
+       RETURNING id, firstname, lastname, email, grade, auth_type`,
+      [firstName || null, lastName || null, email, hash, String(grade)]
+    );
+
+    const user = result.rows[0];
+    user.display_name = display_name;
+
+    await initializeUserAbility(client, user.id, user.grade);
+
+    await client.query('COMMIT');
+
+    return { token: makeToken(user), user: formatUser(user) };
+  } catch (err) {
+    await client.query('ROLLBACK');
     throw err;
+  } finally {
+    client.release();
   }
-
-  const hash = await bcrypt.hash(password, 10);
-  const display_name = `${firstName || ''} ${lastName || ''}`.trim() || email;
-
-  const result = await db.query(
-    `INSERT INTO users (firstname, lastname, email, password_hash, grade, auth_type, created_by)
-     VALUES ($1, $2, $3, $4, $5, 'password', 'self')
-     RETURNING id, firstname, lastname, email, grade, auth_type`,
-    [firstName || null, lastName || null, email, hash, String(grade)]
-  );
-
-  const user = result.rows[0];
-  user.display_name = display_name;
-
-  return { token: makeToken(user), user: formatUser(user) };
 }
 
 async function registerClass({ className, grade, students }) {
@@ -108,12 +128,7 @@ async function registerClass({ className, grade, students }) {
 
       while (exists) {
         email = generateUsername(firstName, lastName);
-
-        const existing = await client.query(
-          'SELECT id FROM users WHERE email = $1',
-          [email]
-        );
-
+        const existing = await client.query('SELECT id FROM users WHERE email = $1', [email]);
         exists = existing.rows.length > 0;
       }
 
@@ -126,32 +141,25 @@ async function registerClass({ className, grade, students }) {
          VALUES
           ($1, $2, $3, $4, $5, $6, 'qr', 'teacher')
          RETURNING id, firstname, lastname, email, grade, class_id, auth_type, qr_token`,
-        [
-          firstName || null,
-          lastName || null,
-          email,
-          hash,
-          String(grade),
-          createdClass.id,
-        ]
+        [firstName || null, lastName || null, email, hash, String(grade), createdClass.id]
       );
 
+      const created = result.rows[0];
+
+      await initializeUserAbility(client, created.id, created.grade);
+
       createdStudents.push({
-        id: result.rows[0].id,
-
-        name: `${result.rows[0].firstname || ''} ${result.rows[0].lastname || ''}`.trim(),
-        firstName: result.rows[0].firstname,
-        lastName: result.rows[0].lastname,
-
-        username: result.rows[0].email,
+        id: created.id,
+        name: `${created.firstname || ''} ${created.lastname || ''}`.trim(),
+        firstName: created.firstname,
+        lastName: created.lastname,
+        username: created.email,
         password,
-
-        qrToken: result.rows[0].qr_token,
-        qrLoginUrl: `${process.env.FRONTEND_URL || 'https://127.0.0.1:3000'}/qr-login?token=${result.rows[0].qr_token}`,
-
-        grade: result.rows[0].grade,
-        classId: result.rows[0].class_id,
-        authType: result.rows[0].auth_type,
+        qrToken: created.qr_token,
+        qrLoginUrl: `${process.env.FRONTEND_URL || 'https://127.0.0.1:3000'}/qr-login?token=${created.qr_token}`,
+        grade: created.grade,
+        classId: created.class_id,
+        authType: created.auth_type,
       });
     }
 
@@ -164,21 +172,15 @@ async function registerClass({ className, grade, students }) {
     await client.query('COMMIT');
 
     return {
-      class: {
-        id: createdClass.id,
-        name: createdClass.name,
-        grade: createdClass.grade,
-      },
+      class: { id: createdClass.id, name: createdClass.name, grade: createdClass.grade },
       students: createdStudents,
     };
   } catch (err) {
     await client.query('ROLLBACK');
-
     if (err.code === '23505') {
       err.status = 409;
       err.message = 'Class name or username already exists';
     }
-
     throw err;
   } finally {
     client.release();
@@ -253,23 +255,34 @@ async function anonymousLogin(display_name = 'Gast') {
   const email = `guest_${guestId}`;
   const grade = '3';
 
-  const result = await db.query(
-    `INSERT INTO users 
-      (firstname, lastname, email, grade, auth_type, created_by)
-     VALUES 
-      ($1, $2, $3, $4, 'anonymous', 'self')
-     RETURNING id, firstname, lastname, email, grade, auth_type, avatar_url, has_completed_tutorial`,
-    [firstname, lastname, email, grade]
-  );
+  const client = await db.connect();
 
-  const user = result.rows[0];
+  try {
+    await client.query('BEGIN');
 
-  user.display_name = 'Gast';
+    const result = await client.query(
+      `INSERT INTO users 
+        (firstname, lastname, email, grade, auth_type, created_by)
+       VALUES 
+        ($1, $2, $3, $4, 'anonymous', 'self')
+       RETURNING id, firstname, lastname, email, grade, auth_type, avatar_url, has_completed_tutorial`,
+      [firstname, lastname, email, grade]
+    );
 
-  return {
-    token: makeToken(user),
-    user: formatUser(user),
-  };
+    const user = result.rows[0];
+    user.display_name = 'Gast';
+
+    await initializeUserAbility(client, user.id, user.grade);
+
+    await client.query('COMMIT');
+
+    return { token: makeToken(user), user: formatUser(user) };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 async function logout(user_id) {

@@ -1,32 +1,25 @@
-const express = require('express');
-const router = express.Router();
-
-const { authMiddleware } = require('../middleware/auth');
+const router = require('express').Router();
 const progressService = require('../services/progressService');
+const { authMiddleware } = require('../middleware/auth');
 
-router.post('/', authMiddleware, async (req, res) => {
+// sendBeacon can't set an Authorization header, so the client embeds the
+// token in the body instead. Promote it to a header before authMiddleware runs.
+function resolveAuth(req, res, next) {
+  if (!req.headers.authorization && req.body?.token) {
+    req.headers.authorization = `Bearer ${req.body.token}`;
+  }
+  next();
+}
+
+router.post('/', resolveAuth, authMiddleware, async (req, res) => {
   const { attempts } = req.body;
-
-  if (!Array.isArray(attempts) || attempts.length === 0) {
-    return res.status(400).json({ error: 'attempts must be a non-empty array' });
+  if (!Array.isArray(attempts) || !attempts.length) {
+    return res.status(400).json({ error: 'attempts array is required' });
   }
-
-  const invalid = attempts.some(
-    (a) =>
-      typeof a.problem_id !== 'number' ||
-      typeof a.is_correct !== 'boolean' ||
-      typeof a.time_spent_seconds !== 'number'
-  );
-
-  if (invalid) {
-    return res.status(400).json({ error: 'Invalid attempt shape' });
-  }
-
   try {
-    const count = await progressService.saveAttempts(req.user.id, attempts);
-    res.json({ saved: count });
+    const results = await progressService.submitAttempts(req.user.id, attempts);
+    res.status(201).json({ results });
   } catch (err) {
-    console.error('Progress flush error:', err);
     res.status(err.status || 500).json({ error: err.message });
   }
 });

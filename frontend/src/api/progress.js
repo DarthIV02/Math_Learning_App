@@ -7,8 +7,8 @@ const BASE_URL =
 // Exported so the hook can use it for sendBeacon
 export const PROGRESS_URL = `${BASE_URL}/progress`;
 
-export async function flushAttempts(attempts, token) {
-  const response = await fetch(PROGRESS_URL, {
+export async function flushAttempts(attempts, token, url = PROGRESS_URL) {
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
