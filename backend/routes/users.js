@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 
 const userService = require('../services/userService');
+const targetProfileService = require('../services/targetProfileService');
 const { authMiddleware } = require('../middleware/auth');
 
 // ─────────────────────────────────────────────
@@ -140,6 +141,24 @@ router.get('/:id', authMiddleware, async (req, res) => {
     });
   }
 });
+
+// ─────────────────────────────────────────────
+// Current user's target problem profile
+// GET /api/users/me/target-profile
+// ─────────────────────────────────────────────
+
+router.get('/me/target-profile', authMiddleware, async (req, res) => {
+  try {
+    const user = await userService.getCurrentUserProfile(req.user.id);
+    const targetProfile = await targetProfileService.getTargetProfile(req.user.id, Number(user.grade));
+      res.json(targetProfile);
+  } catch (err) {
+    res.status(err.status || 500).json({
+      error: err.message,
+    });
+  }
+});
+
 
 // ─────────────────────────────────────────────
 // Update user by ID

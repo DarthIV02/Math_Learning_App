@@ -1,11 +1,44 @@
+import { useEffect, useState } from 'react';
+
 import './StartNow.css';
+
 import SurfaceCard from '../../components/SurfaceCard/SurfaceCard.jsx';
 import PlayfulButton from '../../components/Buttons/PlayfulButton';
 
-export default function StartNow({ onNavigate }) {
+import { fetchTargetProfile } from '../../api/users';
+
+import { capitalizeFirstLetter } from '../../utils/stringManage';
+
+export default function StartNow({ user, token, onTopicSelect }) {
+  const [targetProfile, setTargetProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const completedTasks = 2;
   const totalTasks = 3;
   const progressPercent = (completedTasks / totalTasks) * 100;
+
+  const germanOperationNames = {"addition": "Addition", "subtraction": "Subtraktion", "multiplication": "Multiplikation", "division": "Division"};
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadTargetProfile() {
+      try {
+        setLoading(true);
+        const profile = await fetchTargetProfile(token);
+        console.log('Fetched target profile:', profile);
+        if (!cancelled) setTargetProfile(profile);
+      } catch (err) {
+        if (!cancelled) setError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadTargetProfile();
+    return () => { cancelled = true; };
+  }, [token]);
 
   return (
     <SurfaceCard className="start-now">
@@ -14,8 +47,14 @@ export default function StartNow({ onNavigate }) {
       <div className="start-now__topic-row">
         <span className="start-now__goal-label" aria-hidden="true">📘</span>
         <div className="start-now__topic-text">
-          <span className="start-now__topic-main">Division</span>
-          <span className="start-now__topic-level">(⭐☆☆)</span>
+          <span className="start-now__topic-main">
+            {loading ? '...' : capitalizeFirstLetter(targetProfile?.operation ? germanOperationNames[targetProfile.operation] : targetProfile.theme)}
+          </span>
+          <span className="start-now__topic-level">
+            {targetProfile?.difficulty_label === 'easy' && '(⭐☆☆)'}
+            {targetProfile?.difficulty_label === 'medium' && '(⭐⭐☆)'}
+            {targetProfile?.difficulty_label === 'hard' && '(⭐⭐⭐)'}
+          </span>
         </div>
       </div>
 
@@ -36,14 +75,14 @@ export default function StartNow({ onNavigate }) {
         <p className="start-now__goal-text">Nur noch 1 Aufgabe bis zum Ziel!</p>
       </div>
 
-      <PlayfulButton 
-        label="Weiter machen!" 
-        icon="🚀" 
-        color="green" 
-        size="md" 
-        onClick={() => onNavigate('solve-problems')} 
+      <PlayfulButton
+        label="Weiter machen!"
+        icon="🚀"
+        color="green"
+        size="md"
+        onClick={() => onTopicSelect({ ...targetProfile })}
+        disabled={loading || !!error}
       />
-      
     </SurfaceCard>
   );
 }

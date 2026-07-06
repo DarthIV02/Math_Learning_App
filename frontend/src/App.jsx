@@ -199,6 +199,7 @@ function App() {
 
   const loadProblemsForFilter = async (filter) => {
     const finalFilter = { ...filter, grade: user?.grade, is_assessment: false };
+    
     const problems = await fetchProblems(finalFilter);
 
     setProblemFilter(finalFilter);
@@ -317,7 +318,7 @@ function App() {
         );
       case 'home':
       default:
-        return <HomePage onNavigate={handleNavigate} user={user} />;
+        return <HomePage onNavigate={handleNavigate} user={user} token={token} onTopicSelect={loadProblemsForFilter} />;
     }
   };
 

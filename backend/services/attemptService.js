@@ -1,18 +1,9 @@
 const db = require('../db');
-
-const DEFAULT_K = 0.4; // normal gameplay learning rate
+const { updateAbility, DEFAULT_K } = require('../services/masteryService');
 
 function calculateScore(is_correct, time_spent_seconds) {
   if (!is_correct) return 0;
   return 10 + (time_spent_seconds && time_spent_seconds < 30 ? 5 : 0);
-}
-
-function sigmoid(x) {
-  return 1 / (1 + Math.exp(-x));
-}
-
-function difficultyLogit(difficultyScore) {
-  return difficultyScore - 2; // 1→-1 (easy), 2→0 (medium), 3→+1 (hard)
 }
 
 // correct_answers is a keyed object, e.g. { answer: "82" }
@@ -27,33 +18,6 @@ function checkAnswers(correctAnswers, answerGivenRaw) {
 
   return Object.entries(correctAnswers).every(([key, value]) =>
     String(given?.[key] ?? '').trim().toLowerCase() === String(value).trim().toLowerCase()
-  );
-}
-
-async function updateAbility(client, userId, categoryType, isCorrect, difficultyScore, k = DEFAULT_K) {
-  const difficulty = difficultyLogit(difficultyScore);
-
-  const current = await client.query(
-    `SELECT ability FROM user_dimension_ability
-     WHERE user_id = $1 AND category_type = $2`,
-    [userId, categoryType]
-  );
-  const ability = current.rows[0]?.ability ?? 0;
-
-  const expected = sigmoid(ability - difficulty);
-  const outcome = isCorrect ? 1 : 0;
-  const newAbility = Number(ability) + k * (outcome - expected);
-
-  await client.query(
-    `INSERT INTO user_dimension_ability (user_id, category_type, ability, attempts_count, last_attempted_at)
-     VALUES ($1, $2, $3, 1, NOW())
-     ON CONFLICT (user_id, category_type)
-     DO UPDATE SET
-       ability = $3,
-       attempts_count = user_dimension_ability.attempts_count + 1,
-       last_attempted_at = NOW(),
-       updated_at = NOW()`,
-    [userId, categoryType, newAbility]
   );
 }
 

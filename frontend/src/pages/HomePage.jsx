@@ -6,7 +6,7 @@ import StatBubble from '../features/StatBubble/StatBubble';
 import StartNow from '../features/StartNow/StartNow';
 import UploadProblem from '../features/UploadProblem/UploadProblem';
 
-export default function HomePage({ onNavigate, user }) {
+export default function HomePage({ onNavigate, user, token, onTopicSelect }) {
   return (
     <div className="home-page">
       <BackgroundLayer />
@@ -26,7 +26,7 @@ export default function HomePage({ onNavigate, user }) {
 
         <main className="home-page__scroll">
           <section className="home-page__hero">
-            <StartNow onNavigate={onNavigate} />
+            <StartNow user={user} token={token} onTopicSelect={onTopicSelect} />
           </section>
 
           <section className="home-page__secondary">

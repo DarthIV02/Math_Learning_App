@@ -9,6 +9,11 @@ export async function fetchProblems({
   theme,
   difficulty,
   grade,
+  number_range,
+  operation_category,
+  unknown_position,
+  linguistic_complexity,
+  cognitive_demand,
   is_assessment = false,
 }) {
   const params = new URLSearchParams();
@@ -17,10 +22,14 @@ export async function fetchProblems({
   if (theme) params.set('theme', theme);
   if (difficulty) params.set('difficulty', difficulty);
   if (grade) params.set('grade', grade);
+  if (number_range) params.set('number_range', number_range);
+  if (operation_category) params.set('operation_category', operation_category);
+  if (unknown_position) params.set('unknown_position', unknown_position);
+  if (linguistic_complexity) params.set('linguistic_complexity', linguistic_complexity);
+  if (cognitive_demand) params.set('cognitive_demand', cognitive_demand);
+  
   params.set('is_assessment', is_assessment);
   params.set('unsolvedOnly', true);
-
-  console.log('Fetching problems with params:', Object.fromEntries(params.entries()));
 
   const token = localStorage.getItem('token');
 

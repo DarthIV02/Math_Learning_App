@@ -93,3 +93,19 @@ export async function awardProblemCoins(problemId, amount, token) {
 
   return result.user || result;
 }
+
+export async function fetchTargetProfile(token) {
+  const response = await fetch(`${BASE_URL}/users/me/target-profile`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || 'Zielprofil konnte nicht geladen werden.');
+  }
+
+  return result;
+}
