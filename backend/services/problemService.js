@@ -615,12 +615,12 @@ async function getGenerationStatus(generationRequestId, userId) {
     quantity: job.quantity,
     problems: ready,
   };
-}async function getAssessmentProblems() {
+}async function getAssessmentProblems(grade) {
   const { rows } = await db.query(
     `SELECT id, question_text, subject_object, emojis, colors, tips, correct_answers
      FROM problems
-     WHERE is_assessment = true
-     ORDER BY assessment_order ASC`
+     WHERE is_assessment = true AND grade = $1
+     ORDER BY assessment_order ASC`, [grade]
   );
   return rows;
 }

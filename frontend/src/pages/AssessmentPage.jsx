@@ -57,7 +57,7 @@ export default function AssessmentPage({ token, user, onAssessmentComplete }) {
   const [problems, setProblems] = useState([]);
 
   useEffect(() => {
-    fetchAssessmentProblems()
+    fetchAssessmentProblems(user?.grade)
       .then((data) => {
         setProblems(data);
         setPhase('welcome');

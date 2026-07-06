@@ -41,7 +41,8 @@ router.get('/generation-status', authMiddleware, async (req, res) => {
 
 router.get('/assessment', authMiddleware, async (req, res) => {
   try {
-    const problems = await problemService.getAssessmentProblems();
+    const { grade } = req.query;
+    const problems = await problemService.getAssessmentProblems(grade);
     res.json(problems);
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });

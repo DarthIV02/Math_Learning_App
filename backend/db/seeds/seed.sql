@@ -57,7 +57,9 @@ INSERT INTO operation_counts (
 VALUES
 (1, 'Single operation problem.', 'easy', 1),
 (2, 'Two simple operations.', 'medium', 2),
-(3, 'Three simple operations.', 'hard', 3);
+(3, 'Three simple operations.', 'medium', 2),
+(4, 'Four simple operations.', 'hard', 3),
+(5, 'Five simple operations.', 'hard', 3);
 
 INSERT INTO operation_category_operations (operation_category_id, operation_id)
 VALUES

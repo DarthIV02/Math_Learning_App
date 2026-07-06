@@ -60,10 +60,10 @@ export async function fetchGenerationStatus(requestId) {
   return data;
 }
 
-export async function fetchAssessmentProblems() {
+export async function fetchAssessmentProblems(grade) {
   const token = localStorage.getItem('token');
 
-  const res = await fetch(`${BASE_URL}/problems/assessment`, {
+  const res = await fetch(`${BASE_URL}/problems/assessment?grade=${grade}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

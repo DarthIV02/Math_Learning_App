@@ -194,7 +194,7 @@ CREATE TABLE problems (
 );
 
 CREATE UNIQUE INDEX idx_problems_assessment_order
-  ON problems (assessment_order)
+  ON problems (assessment_order, grade)
   WHERE is_assessment = true;
 
 -- ─────────────────────────────────────────────
