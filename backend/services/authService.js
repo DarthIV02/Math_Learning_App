@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const db = require('../db');
+const db = require('../db/pool');
 const { JWT_SECRET } = require('../middleware/auth');
 const { initializeUserAbility } = require('./masteryService');
 

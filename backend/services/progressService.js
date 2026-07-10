@@ -1,4 +1,4 @@
-const db = require('../db');
+const db = require('../db/pool');
 const { recordAttempt } = require('./attemptService');
 
 async function submitAttempts(user_id, attempts) {

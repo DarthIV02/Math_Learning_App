@@ -11,6 +11,7 @@ services:
       - ./backend/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
       - ./backend/db/seeds/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
       - ./backend/db/seeds/seed-assessment.sql:/docker-entrypoint-initdb.d/03-seed-assessment.sql
+      - ./backend/db/seeds/gsm8k-cache.sql:/docker-entrypoint-initdb.d/04-seed-gsm8k.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U mathapp"]
       interval: 5s

@@ -1,4 +1,4 @@
-const db = require('../db');
+const db = require('../db/pool');
 const bcrypt = require('bcrypt');
 
 async function createQrUser(display_name) {

@@ -1,4 +1,4 @@
-const db = require('../db');
+const db = require('../db/pool');
 
 async function list(table) {
   const result = await db.query(`SELECT * FROM ${table} ORDER BY name`);

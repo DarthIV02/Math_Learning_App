@@ -1,4 +1,4 @@
-const db = require('../db');
+const db = require('../db/pool');
 const aiService = require('./aiService');
 const {getIdByName, getNumberRangeId, getOperationCountId, getOperationIds} = require('../utils/get_db')
 

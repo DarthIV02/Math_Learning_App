@@ -2,17 +2,17 @@ require("dotenv").config({ path: "../.env.local" });
 
 const OpenAI = require("openai");
 // const generateEquationPrompt = require("../utils/generate_equation");
-const generateSituationPrompt = require("../utils/prompts_LLM/generate_story");
-const generateQuantityRelationshipPrompt = require("../utils/prompts_LLM/generate_quantity_relationship");
-const generateProblemTextPrompt = require("../utils/prompts_LLM/generate_problem");
-const generateQuestionVariantsPrompt = require("../utils/prompts_LLM/generate_question_variant");
+const generateSituationPrompt = require("../prompts_LLM/old_prompts/generate_story.js");
+const generateQuantityRelationshipPrompt = require("../prompts_LLM/old_prompts/generate_quantity_relationship.js");
+const generateProblemTextPrompt = require("../prompts_LLM/old_prompts/generate_problem.js");
+const generateQuestionVariantsPrompt = require("../prompts_LLM/old_prompts/generate_question_variant.js");
 const {
   generateProblemLanguageEvaluationPrompt,
   generateProblemMathEvaluationPrompt,
-} = require("../utils/prompts_LLM/evaluate_problem_difficulty");
+} = require("../prompts_LLM/old_prompts/evaluate_problem_difficulty.js");
 const validateProblemEvaluation = require("../utils/compare_evaluation.js");
-const generateProblemRepairPrompt = require("../utils/prompts_LLM/repair_problem_alignment_prompt");
-const generateProblemVisualSupportPrompt = require("../utils/prompts_LLM/generate_sticker_help")
+const generateProblemRepairPrompt = require("../prompts_LLM/old_prompts/repair_problem_alignment_prompt.js");
+const generateProblemVisualSupportPrompt = require("../prompts_LLM/old_prompts/generate_sticker_help.js")
 
 const API_KEY = process.env.API_KEY;
 const MODEL = process.env.MODEL;
@@ -508,4 +508,5 @@ if (require.main === module) {
 
 module.exports = {
   call_openai_api,
+  prompting_openai
 };

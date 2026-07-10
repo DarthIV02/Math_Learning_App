@@ -1,5 +1,5 @@
 // services/target_profile_service.js
-const db = require('../db');
+const db = require('../db/pool');
 const {
   DIMENSION_TABLES,
   getUserAbilities,

@@ -1,4 +1,4 @@
-const db = require('../db');
+const db = require('../db/pool');
 const { updateAbility, DEFAULT_K } = require('../services/masteryService');
 
 function calculateScore(is_correct, time_spent_seconds) {

@@ -1,5 +1,5 @@
 // services/assessmentService.js
-const db = require('../db');
+const db = require('../db/pool');
 const { recordAttempt } = require('./attemptService');
 
 const ASSESSMENT_K = 0.8;

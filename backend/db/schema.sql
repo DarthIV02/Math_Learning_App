@@ -214,6 +214,51 @@ CREATE TABLE operation_category_operations (
 );
 
 -- ─────────────────────────────────────────────
+-- seed_problems
+-- ─────────────────────────────────────────────
+ 
+CREATE TABLE seed_problems (
+  id SERIAL PRIMARY KEY,
+ 
+  source TEXT NOT NULL DEFAULT 'gsm8k',       -- lets other datasets be added later
+  external_id TEXT,                            -- e.g. the dataset's row_idx, for de-duping re-imports
+ 
+  grade INT CHECK (grade IN (3, 4, null)),
+ 
+  question_text TEXT NOT NULL,                 -- original, untranslated question
+  answer_text TEXT NOT NULL,                    -- original worked solution, incl. <<...>> and #### annotations
+ 
+  correct_answers JSONB NOT NULL,               -- e.g. { "value": 72 }
+ 
+  topic TEXT NOT NULL CHECK (topic IN ('money', 'distances', 'weights', 'other')),
+  primary_unit TEXT,
+  extracted_variables JSONB NOT NULL DEFAULT '[]',
+ 
+  number_range_id INT REFERENCES number_ranges(id),
+  operation_category_id INT REFERENCES operation_categories(id),
+  unknown_position_id INT REFERENCES unknown_positions(id),
+  linguistic_complexity_id INT REFERENCES linguistic_complexities(id),
+  cognitive_demand_id INT REFERENCES cognitive_demands(id),
+  operation_count_id INT REFERENCES operation_counts(id),
+ 
+  ai_full_return JSONB,                         -- full merged object (deterministic + LLM fields), for audit
+ 
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+ 
+  UNIQUE (source, external_id)
+);
+ 
+-- ─────────────────────────────────────────────
+-- seed_problems ↔ operations (many-to-many, mirrors problem_operations)
+-- ─────────────────────────────────────────────
+ 
+CREATE TABLE seed_problem_operations (
+  seed_problem_id INT REFERENCES seed_problems(id) ON DELETE CASCADE,
+  operation_id INT REFERENCES operations(id) ON DELETE CASCADE,
+  PRIMARY KEY (seed_problem_id, operation_id)
+);
+
+-- ─────────────────────────────────────────────
 -- Difficulty profiles
 -- ─────────────────────────────────────────────
 

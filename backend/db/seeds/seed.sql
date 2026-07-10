@@ -33,20 +33,17 @@ VALUES
 ('change_unknown', 'medium', 2),
 ('start_unknown', 'hard', 3);
 
-INSERT INTO linguistic_complexities (name, description, difficulty_label, score)
-VALUES
-('simple_direct_sentence', 'One short direct sentence.', 'easy', 1),
-('two_short_sentences', 'Two short sentences with clear wording.', 'medium', 2),
-('clear_relationship', 'Clear but slightly more complex relationship.', 'medium', 2),
-('longer_irrelevant_text', 'Longer text with irrelevant information.', 'hard', 3);
+INSERT INTO linguistic_complexities (name, description, difficulty_label, score) VALUES
+  ('simple',       'Compact, direct sentence structure; all quantities appear together with an obvious relationship.', 'easy',   1),
+  ('relationship', '2-3 sentences where every stated quantity is relevant; relationship must be pieced together across sentences.', 'medium', 2),
+  ('irrelevant',   'Contains one or more numeric values or details seeded to distract from the actual calculation.', 'hard',   3)
+ON CONFLICT (name) DO NOTHING;
 
-INSERT INTO cognitive_demands (level, name, description, difficulty_label, score)
-VALUES
-(1, 'direct_operation_mapping', 'One direct operation.', 'easy', 1),
-(2, 'sequential_planning', 'Two or more steps in clear order.', 'medium', 2),
-(3, 'constructing_hidden_quantities', 'Must derive an intermediate quantity.', 'medium', 2),
-(4, 'managing_hierarchical_structure', 'Groups inside groups.', 'hard', 3),
-(5, 'tracking_relational_dependencies', 'Quantities depend on other quantities.', 'hard', 3);
+INSERT INTO cognitive_demands (level, name, description, difficulty_label, score) VALUES
+  (1, 'recall', 'Solution method is immediately obvious; recall and execute a standard single-step procedure.', 'easy',   1),
+  (2, 'choose', 'Must interpret which operation(s) to use before calculating; procedure becomes obvious once chosen.', 'medium', 2),
+  (3, 'plan',   'Must analyze, combine multiple ideas, or plan several steps; no immediately obvious procedure.', 'hard',   3)
+ON CONFLICT (name) DO NOTHING;
 
 INSERT INTO operation_counts (
   num_operations,
@@ -193,7 +190,7 @@ VALUES (
   ARRAY['', '', '', ''],
   '{"Ausreichend?": "Ja"}',
   ARRAY['Beginnen Sie damit, die Ausgaben aufzuschreiben. Wie viel kostet jedes Objekt?'],
-  5, 3, 1, 4, 2, 3, 14, 'medium'
+  5, 3, 1, 2, 2, 3, 12, 'medium'
 ),
 (
   4,
@@ -226,7 +223,7 @@ VALUES (
   ARRAY['', ''],
   '{"Radio": 332}',
   ARRAY['Beginne damit aufzuschreiben, wie viel Geld er hatte und wie viel er nach dem Radio noch hatte.'],
-  2, 1, 3, 3, 3, 1, 12, 'medium'
+  2, 1, 3, 2, 2, 1, 10, 'medium'
 ),
 (
   1,
@@ -237,7 +234,7 @@ VALUES (
   ARRAY['', '', ''],
   '{"Will": 140, "Sam": 70}',
   ARRAY['Versuchen Sie, für jeden Schüler ein Sparschwein mit dem gleichen Geldbetrag herauszuholen'],
-  5, 2, 1, 3, 5, 2, 15, 'hard'
+  5, 2, 1, 2, 3, 2, 12, 'medium'
 ),
 (
   4,
@@ -248,7 +245,7 @@ VALUES (
   ARRAY['', '', ''],
   '{"Gesamtfutter": 922}',
   ARRAY['Beginne damit, die verschiedenen Futtersorten herauszuziehen. Wie viel wiegt jede Sorte?'],
-  3, 1, 1, 4, 2, 2, 13, 'medium'
+  3, 1, 1, 2, 2, 2, 11, 'medium'
 ),
 (
   4,
@@ -259,7 +256,7 @@ VALUES (
   ARRAY['', ''],
   '{"Kisten": 8}',
   ARRAY['Beginne damit, die Äpfel in die Kisten zu ziehen.'],
-  1, 2, 1, 1, 4, 1, 10, 'medium'
+  1, 2, 1, 1, 2, 1, 8, 'easy'
 ),
 (
   4,

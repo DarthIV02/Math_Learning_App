@@ -1,4 +1,4 @@
-const db = require('../db');
+const db = require('../db/pool');
 
 const DEFAULT_K = 0.4; // normal gameplay learning rate
 
