@@ -17,6 +17,7 @@ const generateProblemVisualSupportPrompt = require("../prompts_LLM/old_prompts/g
 const API_KEY = process.env.API_KEY;
 const MODEL = process.env.MODEL;
 const LLM_URL = process.env.LLM_URL;
+const VISION_MODEL = process.env.VISION_MODEL;
 
 const openai = new OpenAI({
   baseURL: `${LLM_URL}/v1`,
@@ -58,6 +59,67 @@ async function prompting_openai(system_prompt, user_prompt, return_format){
       console.error(error.response.data);
     }
 
+    throw error;
+  }
+}
+
+function encodeImageToDataUrl(imagePath) {
+  const ext = path.extname(imagePath).slice(1).toLowerCase();
+  const mimeMap = {
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+    gif: "image/gif",
+  };
+  const mime = mimeMap[ext] || "image/jpeg";
+
+  const b64 = fs.readFileSync(imagePath).toString("base64");
+  return `data:${mime};base64,${b64}`;
+}
+
+// --- vision-capable prompting function, same client, different model ---
+async function prompting_openai_vision(imagePathOrUrl, prompt, options = {}) {
+  const { maxTokens = 1024, temperature = 0.7 } = options;
+
+  try {
+    const isUrl = /^https?:\/\//.test(imagePathOrUrl);
+    const imageUrl = isUrl
+      ? imagePathOrUrl
+      : encodeImageToDataUrl(imagePathOrUrl);
+
+    const response = await openai.chat.completions.create({
+      model: VISION_MODEL,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "image_url", image_url: { url: imageUrl } },
+            { type: "text", text: prompt },
+          ],
+        },
+      ],
+      max_tokens: maxTokens,
+      temperature: temperature,
+    });
+
+    const message = response.choices[0].message;
+    const usage = response.usage;
+
+    console.log(
+      `Tokens — prompt: ${usage.prompt_tokens}, completion: ${usage.completion_tokens}, total: ${usage.total_tokens}`
+    );
+
+    const reasoning = message.reasoning || message.reasoning_content || null;
+    if (reasoning) {
+      console.log("=== Reasoning ===");
+      console.log(reasoning);
+    }
+
+    return message.content;
+  } catch (error) {
+    console.error("Vision API Error:", error);
+    if (error.response) console.error(error.response.data);
     throw error;
   }
 }
@@ -508,5 +570,6 @@ if (require.main === module) {
 
 module.exports = {
   call_openai_api,
-  prompting_openai
+  prompting_openai,
+  prompting_openai_vision
 };

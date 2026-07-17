@@ -51,9 +51,9 @@ export default function StartNow({ user, token, onTopicSelect }) {
             {loading ? '...' : capitalizeFirstLetter(targetProfile?.operation ? germanOperationNames[targetProfile.operation] : targetProfile.theme)}
           </span>
           <span className="start-now__topic-level">
-            {targetProfile?.difficulty_label === 'easy' && '(⭐☆☆)'}
-            {targetProfile?.difficulty_label === 'medium' && '(⭐⭐☆)'}
-            {targetProfile?.difficulty_label === 'hard' && '(⭐⭐⭐)'}
+            {targetProfile?.difficulty === 'easy' && '(⭐☆☆)'}
+            {targetProfile?.difficulty === 'medium' && '(⭐⭐☆)'}
+            {targetProfile?.difficulty === 'hard' && '(⭐⭐⭐)'}
           </span>
         </div>
       </div>
